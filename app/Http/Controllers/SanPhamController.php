@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\SanPham;
 use Illuminate\Http\Request;
 
-class y extends Controller
+class SanPhamController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        $sanPhams = SanPham::all();
+        return response()->json($sanPhams,200);
     }
 
     /**

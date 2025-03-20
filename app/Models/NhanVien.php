@@ -16,16 +16,10 @@ class NhanVien extends Model
         'email',
         'mat_khau',
         'so_dien_thoai',
-        'chuc_vu',
+        'chuc_vu'
     ];
 
     protected $hidden = [
-        'mat_khau',
+        'mat_khau'
     ];
-
-    // Định nghĩa getter để tránh lỗi bcrypt
-    public function setMatKhauAttribute($value)
-    {
-        $this->attributes['mat_khau'] = bcrypt($value);
-    }
 }
