@@ -1,15 +1,37 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GioHangController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SanPhamController;
+use Illuminate\Support\Facades\Auth;
+// Routes cho sản phẩm
+Route::resource('sanpham', SanPhamController::class);
+// Route::get('/san-pham', [SanPhamController::class, 'index'])->name('sanpham.index');    
+// Route::get('/san-pham/create', [SanPhamController::class, 'create'])->name('sanpham.create');
+// Route::post('/san-pham', [SanPhamController::class, 'store'])->name('sanpham.store');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+ ;
+//  Route::resource('admin', AdminController::class);
+// Route::middleware(['web'])->group(function () {
+//     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+//     Route::post('/login', [AuthController::class, 'login']);
+//     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// });
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/home', function () {
+    return view('home');
+})->name('home');
+ 
 Route::middleware(['auth'])->group(function () {
-    Route::resource('giohang', GioHangController::class);
-    // Route::get('/gio-hang', [GioHangController::class, 'showCart'])->name('gio-hang.show');
-    // Route::post('/gio-hang/them', [GioHangController::class, 'addToCart'])->name('gio-hang.add');
-    // Route::put('/gio-hang/cap-nhat/{id}', [GioHangController::class, 'updateCart'])->name('gio-hang.update');
-    // Route::delete('/gio-hang/xoa/{id}', [GioHangController::class, 'removeFromCart'])->name('gio-hang.destroy');
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    Route::resource('/admin/sanpham', SanPhamController::class);
+}) ;
+
+ 
+
+Route::get('/debug-session', function () {
+    return response()->json(session()->all());
 });

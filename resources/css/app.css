@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.input-style {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-green {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+
+.btn-green:hover {
+    background-color: #218838;
+}
+
+.btn-gray {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-gray:hover {
+    background-color: #5a6268;
+}
