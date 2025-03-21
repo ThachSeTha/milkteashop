@@ -2,31 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChiTietDonHang extends Model
 {
-    use HasFactory;
-
     protected $table = 'chi_tiet_don_hangs';
+    protected $fillable = ['don_hang_id', 'san_pham_id', 'so_luong', 'gia_ban'];
 
-    protected $fillable = [
-        'don_hangs_id',
-        'san_phams_id',
-        'so_luong',
-        'gia_ban',
-    ];
-
-    // Định nghĩa quan hệ với đơn hàng
-    public function donHang()
+    public function donHang(): BelongsTo
     {
-        return $this->belongsTo(DonHang::class, 'don_hangs_id');
+        return $this->belongsTo(DonHang::class, 'don_hang_id');
     }
 
-    // Định nghĩa quan hệ với sản phẩm
-    public function sanPham()
+    public function sanPham(): BelongsTo
     {
-        return $this->belongsTo(SanPham::class, 'san_phams_id');
+        return $this->belongsTo(SanPham::class, 'san_pham_id');
     }
 }

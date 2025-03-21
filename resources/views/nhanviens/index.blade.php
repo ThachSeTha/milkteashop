@@ -148,37 +148,57 @@
     <script>
         // Hàm lấy danh sách nhân viên
         function loadNhanViens() {
-            fetch('/api/nhan-vien')
-            .then(response => {
+    fetch('/api/nhan-vien')
+        .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok ' + response.statusText);
             }
             return response.json();
-        })                .then(data => {
-                    const tableBody = document.getElementById('nhanVienTableBody');
-                    tableBody.innerHTML = '';
-                    data.forEach(nhanVien => {
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td>${nhanVien.id}</td>
-                                <td>${nhanVien.ho_ten}</td>
-                                <td>${nhanVien.email}</td>
-                                <td>${nhanVien.so_dien_thoai || 'N/A'}</td>
-                                <td>${nhanVien.chuc_vu}</td>
-                                <td>
-                                    <button class="btn btn-warning btn-action" onclick="editNhanVien(${nhanVien.id})">
-                                        <i class="fas fa-edit"></i> Sửa
-                                    </button>
-                                    <button class="btn btn-danger btn-action" onclick="deleteNhanVien(${nhanVien.id})">
-                                        <i class="fas fa-trash"></i> Xóa
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                })
-                .catch(error => console.error('Lỗi khi lấy danh sách nhân viên:', error));
-        }
+        })
+        .then(data => {
+            const tableBody = document.getElementById('nhanVienTableBody');
+            tableBody.innerHTML = '';
+            if (data.message) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center">${data.message}</td></tr>`;
+                return;
+            }
+            data.forEach(nhanVien => {
+                if (!nhanVien.id) {
+                    console.error('Nhân viên không có ID:', nhanVien);
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">
+                                Dữ liệu nhân viên không hợp lệ (thiếu ID): ${nhanVien.ho_ten || 'N/A'}
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${nhanVien.id}</td>
+                        <td>${nhanVien.ho_ten || 'N/A'}</td>
+                        <td>${nhanVien.email || 'N/A'}</td>
+                        <td>${nhanVien.so_dien_thoai || 'N/A'}</td>
+                        <td>${nhanVien.chuc_vu || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-warning btn-action" onclick="editNhanVien(${nhanVien.id})">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+                            <button class="btn btn-danger btn-action" onclick="deleteNhanVien(${nhanVien.id})">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy danh sách nhân viên:', error);
+            const tableBody = document.getElementById('nhanVienTableBody');
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Lỗi khi tải danh sách nhân viên</td></tr>`;
+        });
+}
 
         // Thêm nhân viên
         document.getElementById('addNhanVienForm').addEventListener('submit', function(e) {
@@ -207,45 +227,77 @@
 
         // Sửa nhân viên
         function editNhanVien(id) {
-            fetch(`/api/nhan-vien/${id}`)
-                .then(response => response.json())
-                .then(nhanVien => {
-                    document.getElementById('edit_id').value = nhanVien.id;
-                    document.getElementById('edit_ho_ten').value = nhanVien.ho_ten;
-                    document.getElementById('edit_email').value = nhanVien.email;
-                    document.getElementById('edit_so_dien_thoai').value = nhanVien.so_dien_thoai || '';
-                    document.getElementById('edit_chuc_vu').value = nhanVien.chuc_vu;
-                    const modal = new bootstrap.Modal(document.getElementById('editNhanVienModal'));
-                    modal.show();
-                })
-                .catch(error => console.error('Lỗi khi lấy thông tin nhân viên:', error));
-        }
-
-        document.getElementById('editNhanVienForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            const id = data.id;
-            delete data.id;
-
-            fetch(`/api/nhan-vien/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                alert(result.message);
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editNhanVienModal'));
-                modal.hide();
-                loadNhanViens();
-            })
-            .catch(error => console.error('Lỗi khi cập nhật nhân viên:', error));
+    if (!id || id === 'undefined') {
+        alert('ID nhân viên không hợp lệ!');
+        return;
+    }
+    fetch(`/api/nhan-vien/${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(nhanVien => {
+            if (!nhanVien.id) {
+                alert('Không tìm thấy ID nhân viên trong dữ liệu trả về!');
+                return;
+            }
+            document.getElementById('edit_id').value = nhanVien.id;
+            document.getElementById('edit_ho_ten').value = nhanVien.ho_ten || '';
+            document.getElementById('edit_email').value = nhanVien.email || '';
+            document.getElementById('edit_so_dien_thoai').value = nhanVien.so_dien_thoai || '';
+            document.getElementById('edit_chuc_vu').value = nhanVien.chuc_vu || '';
+            const modal = new bootstrap.Modal(document.getElementById('editNhanVienModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy thông tin nhân viên:', error);
+            alert('Lỗi khi lấy thông tin nhân viên: ' + error.message);
         });
+}
 
+document.getElementById('editNhanVienForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit_id').value; // Lấy ID trực tiếp từ input
+    if (!id) {
+        alert('ID nhân viên không hợp lệ!');
+        return;
+    }
+
+    const data = {
+        ho_ten: document.getElementById('edit_ho_ten').value,
+        email: document.getElementById('edit_email').value,
+        mat_khau: document.getElementById('edit_mat_khau').value,
+        so_dien_thoai: document.getElementById('edit_so_dien_thoai').value,
+        chuc_vu: document.getElementById('edit_chuc_vu').value
+    };
+
+    fetch(`/api/nhan-vien/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(result => {
+        alert(result.message || 'Cập nhật nhân viên thành công!');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editNhanVienModal'));
+        modal.hide();
+        loadNhanViens();
+    })
+    .catch(error => {
+        console.error('Lỗi khi cập nhật nhân viên:', error);
+        alert('Lỗi khi cập nhật nhân viên: ' + error.message);
+    });
+});
         // Xóa nhân viên
         function deleteNhanVien(id) {
             if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {

@@ -10,6 +10,8 @@ class NhanVien extends Model
     use HasFactory;
 
     protected $table = 'nhan_viens';
+    protected $primaryKey = 'id'; // Khóa chính
+    public $timestamps = true; // Nếu bảng có cột created_at và updated_at
 
     protected $fillable = [
         'ho_ten',
