@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique(); // Email đăng nhập (không trùng)
             $table->string('mat_khau'); // Mật khẩu
             $table->string('so_dien_thoai')->nullable(); // Số điện thoại
-            $table->enum('chuc_vu', ['quan_ly', 'thu_ngan', 'pha_che']); // Chức vụ
+            $table->enum('chuc_vu', ['quan_ly', 'thu_ngan', 'pha_che', 'phuc_vu', 'giao hang']); // Chức vụ
             $table->timestamps();
         });
     }

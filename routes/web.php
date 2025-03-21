@@ -35,3 +35,11 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/debug-session', function () {
     return response()->json(session()->all());
 });
+use App\Http\Controllers\NhanVienController;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+//Route::apiResource('nhanviens', NhanVienController::class);
+Route::get('/nhanviens', [NhanVienController::class, 'indexView'])->name('nhanvien.index');
+Route::get('/donhangs', [DonHangController::class, 'indexView'])->name('donhang.index');

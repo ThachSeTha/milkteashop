@@ -10,22 +10,18 @@ class NhanVien extends Model
     use HasFactory;
 
     protected $table = 'nhan_viens';
+    protected $primaryKey = 'id'; // Khóa chính
+    public $timestamps = true; // Nếu bảng có cột created_at và updated_at
 
     protected $fillable = [
         'ho_ten',
         'email',
         'mat_khau',
         'so_dien_thoai',
-        'chuc_vu',
+        'chuc_vu'
     ];
 
     protected $hidden = [
-        'mat_khau',
+        'mat_khau'
     ];
-
-    // Định nghĩa getter để tránh lỗi bcrypt
-    public function setMatKhauAttribute($value)
-    {
-        $this->attributes['mat_khau'] = bcrypt($value);
-    }
 }

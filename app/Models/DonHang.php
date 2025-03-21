@@ -2,24 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DonHang extends Model
 {
-    use HasFactory;
-
     protected $table = 'don_hangs';
+    protected $fillable = ['user_id', 'tong_tien', 'trang_thai', 'hinh_anh'];
 
-    protected $fillable = [
-        'user_id',
-        'tong_tien',
-        'trang_thai',
-    ];
-
-    // Định nghĩa quan hệ với User
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function chiTietDonHangs(): HasMany
+    {
+        return $this->hasMany(ChiTietDonHang::class, 'don_hang_id');
     }
 }
