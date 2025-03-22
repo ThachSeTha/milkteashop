@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SanPhamController;
+use App\Http\Controllers\DonHangController;
+use App\Http\Controllers\UserController;
+
+
 use Illuminate\Support\Facades\Auth;
 // Routes cho sản phẩm
 Route::resource('sanpham', SanPhamController::class);
@@ -43,3 +47,4 @@ Route::get('/', function () {
 //Route::apiResource('nhanviens', NhanVienController::class);
 Route::get('/nhanviens', [NhanVienController::class, 'indexView'])->name('nhanvien.index');
 Route::get('/donhangs', [DonHangController::class, 'indexView'])->name('donhang.index');
+Route::resource('users', UserController::class);

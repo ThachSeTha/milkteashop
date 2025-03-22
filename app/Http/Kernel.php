@@ -17,7 +17,7 @@ class Kernel extends HttpKernel
         \Illuminate\Http\Middleware\TrustHosts::class,
         \Illuminate\Http\Middleware\TrustProxies::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \Illuminate\Http\Middleware\PreventRequestsDuringMaintenance::class,
+       // \Illuminate\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
@@ -50,7 +50,7 @@ class Kernel extends HttpKernel
     protected $middlewareAliases = [ 
         'redirect.auth' => \App\Http\Middleware\RedirectIfAuthenticated::class,
          'admin' => \App\Http\Middleware\AdminMiddleware::class, // Thêm dòng này
-        'auth' => \App\Http\Middleware\Authenticate::class,
+       // 'auth' => \App\Http\Middleware\Authenticate::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];
 }

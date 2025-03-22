@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\NhanVien;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class NhanVienController extends Controller
 {
@@ -112,6 +114,11 @@ class NhanVienController extends Controller
      */
     public function destroy(NhanVien $nhanVien)
     {
+        Log::info('Deleting NhanVien with email: ' . $nhanVien->email);
+
+        // Xóa bản ghi trong bảng users
+        $deletedUsers = User::where('email', $nhanVien->email)->delete();
+        Log::info('Deleted users count: ' . $deletedUsers);
         $nhanVien->delete();
 
         return response()->json([
