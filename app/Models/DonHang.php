@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DonHang extends Model
 {
     protected $table = 'don_hangs';
-    protected $fillable = ['user_id', 'tong_tien', 'trang_thai', 'hinh_anh'];
+    protected $fillable = ['user_id', 'tong_tien', 'trang_thai'];
 
-    public function user(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function chiTietDonHangs(): HasMany
+    public function chiTietDonHangs()
     {
         return $this->hasMany(ChiTietDonHang::class, 'don_hang_id');
     }

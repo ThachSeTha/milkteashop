@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.user')
 
 @section('content')
     <h1>Sửa tài khoản</h1>
@@ -6,7 +6,7 @@
         @csrf
         @method('PUT')
         <div class="form-group">
-            <label for="name">UserName</label>
+            <label for="name">Tên đăng nhập</label>
             <input type="text" name="name" class="form-control {{ isset($errors) && $errors->has('name') ? 'is-invalid' : '' }}" value="{{ old('name', $user->name) }}" required>
             @if(isset($errors) && $errors->has('name'))
                 <div class="invalid-feedback">{{ $errors->first('name') }}</div>
@@ -27,7 +27,7 @@
             @endif
         </div>
         <div class="form-group">
-            <label for="role_id">Role</label>
+            <label for="role_id">Vai trò</label>
             <select name="role_id" id="role_id" class="form-control {{ isset($errors) && $errors->has('role_id') ? 'is-invalid' : '' }}" required>
                 @foreach(\App\Models\Role::all() as $role)
                     <option value="{{ $role->id }}" {{ old('role_id', $user->role_id) == $role->id ? 'selected' : '' }}>{{ $role->role }}</option>

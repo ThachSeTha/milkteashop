@@ -1,5 +1,14 @@
-@extends('layouts.app')
-
+@extends('layouts.user')
+@php
+function formatVaiTro($vaiTro) {
+    $vaiTroMap = [
+        'admin' => 'Quản trị viên',
+        'nhanvien' => 'Nhân viên',
+        'khachhang' => 'Khách hàng'
+    ];
+    return $vaiTroMap[$vaiTro] ?? $vaiTro;
+}
+@endphp
 @section('content')
     <h1>Quản lý tài khoản</h1>
 
@@ -16,10 +25,10 @@
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
-                <th>UserName</th>
+                <th>Tên đăng nhập</th>
                 <th>Email</th>
                 <th>Số điện thoại</th>
-                <th>Role</th>
+                <th>Vai trò</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -30,7 +39,11 @@
                     <td>{{ $user->name }}</td>
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->phone }}</td>
-                    <td>{{ $user->role->role ?? 'N/A' }}</td>
+                    <td>@if($user->role)
+                        {{ formatVaiTro($user->role->role) }}
+                    @else
+                        N/A
+                    @endif</td>
                     <td>
                         <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning">Sửa</a>
                         <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline;">

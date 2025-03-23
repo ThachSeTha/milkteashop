@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::with('role')->get();
         return view('user.index', compact('users'));
     }
 
@@ -21,7 +21,7 @@ class UserController extends Controller
     {
         return view('user.create');
     }
-
+    
     public function store(Request $request)
     {
         $request->validate([
