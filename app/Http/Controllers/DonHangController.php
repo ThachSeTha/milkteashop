@@ -14,24 +14,37 @@ use Illuminate\Support\Facades\Notification;
 
 class DonHangController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth'); // Yêu cầu đăng nhập
-    }
+    //public function __construct()
+    //{
+     //   $this->middleware('auth'); // Yêu cầu đăng nhập
+   // }
 
-    public function index()
-    {
-        $donHangs = DonHang::where('user_id', Auth::id())->with('chiTietDonHangs.sanPham')->get();
-        return view('donhangs.index', compact('donHangs'));
-    }
+   public function indexView()
+{
+    $donHangs = DonHang::with('chiTietDonHangs.sanPham', 'user')->paginate(5);
+    $sanPhams = \App\Models\SanPham::all();
+    $sizes = \App\Models\Size::all();
+    $toppings = \App\Models\Topping::all();
+    return view('donhangs.index', compact('donHangs', 'sanPhams', 'sizes', 'toppings'));
+}
 
     public function create()
     {
-        $sanPhams = SanPham::all();
+        $sanPham = SanPham::all();
         $sizes = Size::all();
         $toppings = Topping::all();
-        return view('donhangs.create', compact('sanPhams', 'sizes', 'toppings'));
+        return view('donhangs.create', compact('sanPham', 'sizes', 'toppings'));
     }
+    public function cancel($id)
+{
+    $donHang = DonHang::where('user_id', Auth::id())->findOrFail($id);
+    if ($donHang->trang_thai !== 'cho_xac_nhan') {
+        return redirect()->route('donhangs.index')->with('error', 'Chỉ có thể hủy đơn hàng ở trạng thái "Chờ xác nhận".');
+    }
+
+    $donHang->update(['trang_thai' => 'huy']);
+    return redirect()->route('donhangs.index')->with('success', 'Đã hủy đơn hàng thành công.');
+}
 
     public function addToCart(Request $request)
     {
@@ -65,18 +78,20 @@ class DonHangController extends Controller
 
         session()->put('cart', $cart);
 
-        return redirect()->route('donhangs.create')->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
+        return redirect()->route('donhangs.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
     }
 
     public function removeFromCart($index)
-    {
+    {   
         $cart = session()->get('cart', []);
         if (isset($cart[$index])) {
             unset($cart[$index]);
             session()->put('cart', array_values($cart));
+            return redirect()->route('donhangs.index')->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
         }
-        return redirect()->route('donhangs.create')->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
+        return redirect()->route('donhangs.index')->with('error', 'Sản phẩm không tồn tại trong giỏ hàng.');
     }
+    
 
     public function store(Request $request)
     {
@@ -93,7 +108,7 @@ class DonHangController extends Controller
 
         // Tạo đơn hàng
         $donHang = DonHang::create([
-            'user_id' => Auth::id(),
+            //'user_id' => Auth::id(),
             'tong_tien' => $totalAmount,
             'trang_thai' => 'cho_xac_nhan',
         ]);
@@ -114,10 +129,10 @@ class DonHangController extends Controller
         session()->forget('cart');
 
         // Gửi email thông báo
-        $khachHang = Auth::user();
-        $nhanViens = User::whereHas('role', function ($query) {
-            $query->where('role', 'nhanvien');
-        })->get();
+        //$khachHang = Auth::user();
+        //$nhanViens = User::whereHas('role', function ($query) {
+            //$query->where('role', 'nhanvien');
+        //})->get();
         //Notification::send($khachHang, new OrderCreatedNotification($donHang));
         //Notification::send($nhanViens, new OrderCreatedNotification($donHang));
 
