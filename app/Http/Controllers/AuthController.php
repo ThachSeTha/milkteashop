@@ -30,15 +30,15 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required'
         ]);
-    
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
+        
+       // if (Auth::attempt($credentials)) {
+           // $user = Auth::user();
             
-            if ($user->isAdmin()) {
-                return redirect()->route('admin.index'); // Chuyển đến trang admin
-            }   
-            return redirect()->route('sanpham'); // Người dùng bình thường vào home
-        }
+           // if ($user->isAdmin()) {
+            //    return redirect()->route('admin.index'); // Chuyển đến trang admin
+           // }   
+          //  return redirect()->route('sanpham'); // Người dùng bình thường vào home
+       // }
     
         return back()->withErrors(['email' => 'Thông tin đăng nhập không đúng.']);
     }

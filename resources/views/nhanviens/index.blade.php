@@ -147,7 +147,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Hàm lấy danh sách nhân viên
-        function loadNhanViens() {
+       // Hàm lấy danh sách nhân viên
+function loadNhanViens() {
     fetch('/api/nhan-vien')
         .then(response => {
             if (!response.ok) {
@@ -180,7 +181,7 @@
                         <td>${nhanVien.ho_ten || 'N/A'}</td>
                         <td>${nhanVien.email || 'N/A'}</td>
                         <td>${nhanVien.so_dien_thoai || 'N/A'}</td>
-                        <td>${nhanVien.chuc_vu || 'N/A'}</td>
+                        <td>${formatChucVu(nhanVien.chuc_vu) || 'N/A'}</td>
                         <td>
                             <button class="btn btn-warning btn-action" onclick="editNhanVien(${nhanVien.id})">
                                 <i class="fas fa-edit"></i> Sửa
@@ -199,7 +200,17 @@
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Lỗi khi tải danh sách nhân viên</td></tr>`;
         });
 }
-
+// Hàm ánh xạ giá trị chức vụ thô thành dạng hiển thị
+function formatChucVu(chucVu) {
+    const chucVuMap = {
+        'quan_ly': 'Quản lý',
+        'thu_ngan': 'Thu ngân',
+        'pha_che': 'Pha chế',
+        'phuc_vu': 'Phục vụ',
+        'giao_hang': 'Giao hàng'
+    };
+    return chucVuMap[chucVu] || chucVu; // Nếu không tìm thấy ánh xạ, trả về giá trị gốc
+}
         // Thêm nhân viên
         document.getElementById('addNhanVienForm').addEventListener('submit', function(e) {
             e.preventDefault();

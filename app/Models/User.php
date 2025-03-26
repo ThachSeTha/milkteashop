@@ -3,21 +3,44 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    protected $fillable = ['name', 'email', 'phone', 'password', 'address', 'role_id'];
+    use Notifiable;
 
-    public function role(): BelongsTo
+    protected $table = 'users';
+
+    protected $fillable = [
+        'name',
+        'password',
+        'email',
+        'phone',
+        'role_id',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    public function getAuthIdentifierName()
+    {
+        return 'name';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
-  
-    public function isAdmin() {
-        return $this->role_id == 1;
-    }
-    // public function nhanVien() {
-    //     return $this->role_id == 2;
-    // }
+    
 }

@@ -12,12 +12,6 @@ class SanPhamSeeder extends Seeder
      */
     public function run()
     {
-        SanPham::create([
-            'ten_san_pham' => 'Bó hoa hồng đỏ',
-            'mo_ta' => 'Bó hoa hồng đỏ tươi đẹp mắt.',
-            'gia' => 500000,
-            'hinh_anh' => 'hoa-hong-do.jpg',
-            'danh_mucs_id' => 1
-        ]);
+        
     }
 }
