@@ -21,10 +21,19 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index()
+    public function index(Request $request)
     {
-        $sanPhams = SanPham::orderBy('id', 'desc')->take(6)->get();
+        // Lấy từ khóa tìm kiếm nếu có
+        $query = $request->input('query');
+
+        // Lấy danh sách sản phẩm
+        $sanPhams = SanPham::when($query, function ($queryBuilder) use ($query) {
+            return $queryBuilder->where('ten_san_pham', 'like', "%{$query}%")
+                               ->orWhere('mo_ta', 'like', "%{$query}%");
+        })
+        ->paginate(9); // Phân trang, mỗi trang 9 sản phẩm
 
         return view('home', compact('sanPhams'));
     }
 }
+

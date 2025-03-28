@@ -34,17 +34,17 @@ class SanPhamController extends Controller
     if ($request->hasFile('hinh_anh')) {
         $file = $request->file('hinh_anh');
 
-        // ✅ Lấy tên file và chuyển đến thư mục public/uploads
+        //  Lấy tên file và chuyển đến thư mục public/uploads
         $fileName = time() . '_' . $file->getClientOriginalName();
         $filePath = $file->move(public_path('uploads'), $fileName);
 
-        // ✅ Kiểm tra file đã di chuyển thành công chưa
+        // Kiểm tra file đã di chuyển thành công chưa
         if (!$filePath) {
             return back()->withErrors(['hinh_anh' => 'Không thể lưu file, kiểm tra quyền thư mục.']);
         }
     }
 
-    // ✅ Lưu vào database
+    // Lưu vào database
     SanPham::create([
         'ten_san_pham' => $request->ten_san_pham,
         'mo_ta' => $request->mo_ta,
