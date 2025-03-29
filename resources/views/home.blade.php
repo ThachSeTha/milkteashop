@@ -45,7 +45,7 @@
         }
         /* Navbar cố định khi cuộn */
         .navbar {
-            position: fixed;
+            position:  fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -720,6 +720,20 @@
 
         // Cập nhật số lượng giỏ hàng khi tải trang
         updateCartCount();
+        let lastScrollTop = 0;
+const navbar = document.querySelector(".navbar");
+
+window.addEventListener("scroll", function () {
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (scrollTop > lastScrollTop) {
+        navbar.style.top = "-60px"; // Ẩn navbar khi cuộn xuống
+    } else {
+        navbar.style.top = "0"; // Hiện navbar khi cuộn lên
+    }
+    lastScrollTop = scrollTop;
+});
+
     </script>
 </body>
 </html>
