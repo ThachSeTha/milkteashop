@@ -22,16 +22,8 @@ Route::get('/', function () {
 });
 // Routes cho sản phẩm
 Route::resource('sanpham', SanPhamController::class);
-// Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-//Route::post('/login', [AuthController::class, 'login']);
-//Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/sanpham/create', [SanPhamController::class, 'create'])->name('sanphams.create');
 Route::post('/sanpham/store', [SanPhamController::class, 'store'])->name('sanphams.store');
-
-//Route::middleware(['auth'])->group(function () {
- Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
-   // Route::resource('/admin/sanpham', SanPhamController::class);
-//}) ;
 
 Route::get('/debug-session', function () {
     return response()->json(session()->all());

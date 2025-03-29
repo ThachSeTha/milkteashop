@@ -15,6 +15,8 @@
             color: rgb(5, 5, 5);
             padding: 120px 0;
             text-align: center;
+            margin-top: 110px;
+            position: relative;
         }
         .product-card {
             transition: transform 0.3s, border-color 0.3s;
@@ -43,8 +45,10 @@
         }
         /* Navbar cố định khi cuộn */
         .navbar {
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             background-color: #000000 !important; /* Nền đen */
@@ -142,11 +146,11 @@
         footer {
             background-color: #000000;
             color: #ffffff;
-            padding: 40px 0;
+            padding: 10px 0;
         }
         footer h5 {
             color: #FFD700;
-            font-size: 1.8rem;
+            font-size: 1.2rem;
             margin-bottom: 15px;
         }
         footer ul {
@@ -252,7 +256,7 @@
                         <a class="nav-link active" href="/">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/sanpham/create">Sản phẩm</a>
+                        <a class="nav-link" href="/sanpham">Sản phẩm</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Giới thiệu</a>
