@@ -1,52 +1,70 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // Hiển thị trang đăng nhập
-    public function showLogin()
+    public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    // Xử lý đăng nhập
-    // public function login(Request $request)
-    // {
-    //     $credentials = $request->only('email', 'password');
-
-    //     if (Auth::attempt($credentials)) {
-    //         return redirect('/admin')->with('success', 'Đăng nhập thành công!');
-    //     }
-
-    //     return back()->withErrors(['error' => 'Email hoặc mật khẩu không đúng!']);
-    // }
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
         ]);
-        
-       // if (Auth::attempt($credentials)) {
-           // $user = Auth::user();
-            
-           // if ($user->isAdmin()) {
-            //    return redirect()->route('admin.index'); // Chuyển đến trang admin
-           // }   
-          //  return redirect()->route('sanpham'); // Người dùng bình thường vào home
-       // }
     
-        return back()->withErrors(['email' => 'Thông tin đăng nhập không đúng.']);
-    }
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
     
-    // Đăng xuất
-    public function logout()
-    {
-        Auth::logout();
-        return redirect('/login')->with('success', 'Bạn đã đăng xuất!');
+            // Kiểm tra vai trò và chuyển hướng
+            if (Auth::user()->isAdmin()) {
+                return redirect()->route('admin.index');
+            } else {
+                return redirect()->route('home')->with('error', 'Bạn không có quyền truy cập trang admin.');
+            }
+        }
+    
+        return back()->withErrors([
+            'email' => 'Thông tin đăng nhập không chính xác.',
+        ])->withInput();
     }
+    public function showRegister()
+{
+    return view('auth.register'); // Tạo file này trong resources/views/auth/register.blade.php
+}
+
+public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|min:6|confirmed',
+    ]);
+
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
+
+    Auth::login($user);
+    
+    return redirect()->route('home');
+}
+public function logout(Request $request)
+{
+    Auth::logout();
+
+    $request->session()->invalidate();
+
+    $request->session()->regenerateToken();
+
+    return redirect('/login');
+}
 }

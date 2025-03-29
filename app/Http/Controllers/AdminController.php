@@ -10,7 +10,7 @@ class AdminController extends Controller
     public function index()
     {
         // Kiểm tra nếu người dùng có role là admin (id role = 1)
-        if (Auth::check() && Auth::user()->role_id == 1) {
+        if (Auth::check() && Auth::user()->role_id == 7) {
             return view('admin.index'); // Trả về trang admin
         }
       

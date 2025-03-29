@@ -27,7 +27,7 @@ class SanPhamController extends Controller
         'ten_san_pham' => 'required|string|max:255',
         'mo_ta' => 'nullable|string',
         'gia' => 'required|numeric',
-        'hinh_anh' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        'hinh_anh' => 'required|image|mimes:jpeg,png,jpg|max:4096',
         'danh_mucs_id' => 'nullable|exists:danh_mucs,id',
     ]);
 
@@ -77,7 +77,7 @@ class SanPhamController extends Controller
             'ten_san_pham' => 'required|string|max:255',
             'mo_ta' => 'nullable|string',
             'gia' => 'required|numeric',
-            'hinh_anh' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'hinh_anh' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             'danh_mucs_id' => 'nullable|exists:danh_mucs,id',
         ]);
     

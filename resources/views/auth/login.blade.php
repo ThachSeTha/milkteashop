@@ -38,9 +38,15 @@
     <div class="login-container">
         <h3 class="text-center mb-3">Đăng Nhập</h3>
         
-        @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
+        @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
         
         <form action="{{ url('/login') }}" method="POST">
             @csrf
