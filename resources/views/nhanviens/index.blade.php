@@ -3,332 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý nhân viên</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome để thêm icon -->
+    <title>Danh sách nhân viên</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #e6f0fa;
+            min-height: 100vh;
+            padding: 20px;
         }
+
         .container {
-            margin-top: 30px;
+            max-width: 1200px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin: 0 auto;
         }
-        .table th, .table td {
+
+        h1 {
+            color: #2c3e50;
+            text-align: left;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        h1 i {
+            margin-right: 10px;
+        }
+
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px;
+            position: sticky;
+            top: 0;
+        }
+
+        .table th:first-child { border-top-left-radius: 10px; }
+        .table th:last-child { border-top-right-radius: 10px; }
+
+        .table td {
+            padding: 12px;
             vertical-align: middle;
+            border-bottom: 1px solid #eee;
         }
+
+        .table tr:hover {
+            background-color: #f5f5f5;
+            transition: background-color 0.2s;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            border-color: #3498db;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            border-color: #2980b9;
+        }
+         
         .btn-action {
+            padding: 6px 12px;
             margin-right: 5px;
         }
-        .modal-header {
-            background-color: #007bff;
-            color: white;
+   
+        .alert-success {
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .input-group-text {
+            background: #fff;
+            border-right: none;
+        }
+
+        .form-control, .form-select {
+            border-left: none;
+        }
+
+        /* CSS cho dropdown gợi ý */
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 5px;
+        }
+
+        .autocomplete-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .autocomplete-suggestion:hover {
+            background-color: #f0f0f0;
+        }
+
+        .position-relative {
+            position: relative;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center mb-4">Quản lý nhân viên</h1>
+        <h1><i class="fas fa-users"></i>Danh sách nhân viên</h1>
 
-        <!-- Nút thêm nhân viên -->
-        <div class="text-end mb-3">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNhanVienModal">
-                <i class="fas fa-plus"></i> Thêm nhân viên
-            </button>
-        </div>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
-        <!-- Bảng hiển thị danh sách nhân viên -->
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>Số điện thoại</th>
-                    <th>Chức vụ</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="nhanVienTableBody">
-                <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Modal thêm nhân viên -->
-    <div class="modal fade" id="addNhanVienModal" tabindex="-1" aria-labelledby="addNhanVienModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addNhanVienModalLabel">Thêm nhân viên mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addNhanVienForm">
-                        <div class="mb-3">
-                            <label for="ho_ten" class="form-label">Họ tên</label>
-                            <input type="text" class="form-control" id="ho_ten" name="ho_ten" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="mat_khau" class="form-label">Mật khẩu</label>
-                            <input type="password" class="form-control" id="mat_khau" name="mat_khau" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="so_dien_thoai" class="form-label">Số điện thoại</label>
-                            <input type="text" class="form-control" id="so_dien_thoai" name="so_dien_thoai">
-                        </div>
-                        <div class="mb-3">
-                            <label for="chuc_vu" class="form-label">Chức vụ</label>
-                            <select class="form-select" id="chuc_vu" name="chuc_vu" required>
-                                <option value="quan_ly">Quản lý</option>
-                                <option value="thu_ngan">Thu ngân</option>
-                                <option value="pha_che">Pha chế</option>
-                                <option value="phuc_vu">Phục vụ</option>
-                                <option value="giao_hang">Giao hàng</option>
+        <div class="filter-section">
+            <form method="GET" action="{{ route('nhanviens.index') }}" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                            <select name="chuc_vu" id="chucVuFilter" class="form-select" onchange="this.form.submit()">
+                                <option value="">Tất cả chức vụ</option>
+                                @foreach($chucVus as $chucVu)
+                                    <option value="{{ $chucVu->id }}" {{ request('chuc_vu') == $chucVu->id ? 'selected' : '' }}>
+                                        {{ $chucVu->ten_chuc_vu }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Thêm nhân viên</button>
-                    </form>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group position-relative">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" name="so_dien_thoai" id="soDienThoaiSearch" class="form-control" 
+                                   placeholder="Tìm kiếm số điện thoại..." 
+                                   value="{{ request('so_dien_thoai') }}"
+                                   aria-label="Tìm kiếm số điện thoại" autocomplete="off">
+                            <div id="autocompleteSuggestions" class="autocomplete-suggestions" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ route('nhanviens.create') }}" class="btn btn-primary w-40">
+                            <i class="fas fa-plus me-2"></i>Thêm nhân viên
+                        </a>
+                         <a href="{{ route('admin.index') }}" class="btn btn-secondary w-40">
+                            <i class="fas fa-arrow-left"></i>Quay lại Admin
+                        </a>
+                          
+                </a>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
-    </div>
 
-    <!-- Modal sửa nhân viên -->
-    <div class="modal fade" id="editNhanVienModal" tabindex="-1" aria-labelledby="editNhanVienModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editNhanVienModalLabel">Sửa thông tin nhân viên</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editNhanVienForm">
-                        <input type="hidden" id="edit_id" name="id">
-                        <div class="mb-3">
-                            <label for="edit_ho_ten" class="form-label">Họ tên</label>
-                            <input type="text" class="form-control" id="edit_ho_ten" name="ho_ten" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="edit_email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_mat_khau" class="form-label">Mật khẩu (để trống nếu không đổi)</label>
-                            <input type="password" class="form-control" id="edit_mat_khau" name="mat_khau">
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_so_dien_thoai" class="form-label">Số điện thoại</label>
-                            <input type="text" class="form-control" id="edit_so_dien_thoai" name="so_dien_thoai">
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_chuc_vu" class="form-label">Chức vụ</label>
-                            <select class="form-select" id="edit_chuc_vu" name="chuc_vu" required>
-                                <option value="quan_ly">Quản lý</option>
-                                <option value="thu_ngan">Thu ngân</option>
-                                <option value="pha_che">Pha chế</option>
-                                <option value="phuc_vu">Phục vụ</option>
-                                <option value="giao_hang">Giao hàng</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Cập nhật nhân viên</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS và JavaScript xử lý -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Hàm lấy danh sách nhân viên
-       // Hàm lấy danh sách nhân viên
-function loadNhanViens() {
-    fetch('/api/nhan-vien')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const tableBody = document.getElementById('nhanVienTableBody');
-            tableBody.innerHTML = '';
-            if (data.message) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center">${data.message}</td></tr>`;
-                return;
-            }
-            data.forEach(nhanVien => {
-                if (!nhanVien.id) {
-                    console.error('Nhân viên không có ID:', nhanVien);
-                    tableBody.innerHTML += `
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Chức vụ</th>
+                        <th>Địa chỉ</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="nhanVienTableBody">
+                    @forelse($nhanViens as $nhanvien)
                         <tr>
-                            <td colspan="6" class="text-center text-danger">
-                                Dữ liệu nhân viên không hợp lệ (thiếu ID): ${nhanVien.ho_ten || 'N/A'}
+                            <td>{{ $nhanvien->id }}</td>
+                            <td>{{ $nhanvien->ho_ten }}</td>
+                            <td>{{ $nhanvien->email }}</td>
+                            <td>{{ $nhanvien->so_dien_thoai }}</td>
+                            <td>{{ $nhanvien->chucVu->ten_chuc_vu ?? 'N/A' }}</td>
+                            <td>{{ $nhanvien->dia_chi }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('nhanviens.show', $nhanvien->id) }}" 
+                                       class="btn btn-info btn-action" title="Xem">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('nhanviens.edit', $nhanvien->id) }}" 
+                                       class="btn btn-warning btn-action" title="Sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('nhanviens.destroy', $nhanvien->id) }}" 
+                                          method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-action" 
+                                                title="Xóa" 
+                                                onclick="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
-                    `;
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center">Không có nhân viên nào phù hợp.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const soDienThoaiSearch = document.getElementById('soDienThoaiSearch');
+            const autocompleteSuggestions = document.getElementById('autocompleteSuggestions');
+            const filterForm = document.getElementById('filterForm');
+
+            // Debounce function để tối ưu hiệu năng
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Gửi form khi người dùng nhập số điện thoại (sau 300ms)
+            const debouncedSubmit = debounce(() => {
+                filterForm.submit();
+            }, 300);
+
+            // Gửi AJAX để lấy gợi ý số điện thoại
+            const fetchSuggestions = debounce(async (search) => {
+                if (search.length < 2) { // Chỉ tìm kiếm nếu nhập ít nhất 2 ký tự
+                    autocompleteSuggestions.style.display = 'none';
+                    if (search.length === 0) {
+                        // Nếu ô tìm kiếm trống, gửi form ngay lập tức để trả về tất cả nhân viên
+                        filterForm.submit();
+                    }
                     return;
                 }
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${nhanVien.id}</td>
-                        <td>${nhanVien.ho_ten || 'N/A'}</td>
-                        <td>${nhanVien.email || 'N/A'}</td>
-                        <td>${nhanVien.so_dien_thoai || 'N/A'}</td>
-                        <td>${formatChucVu(nhanVien.chuc_vu) || 'N/A'}</td>
-                        <td>
-                            <button class="btn btn-warning btn-action" onclick="editNhanVien(${nhanVien.id})">
-                                <i class="fas fa-edit"></i> Sửa
-                            </button>
-                            <button class="btn btn-danger btn-action" onclick="deleteNhanVien(${nhanVien.id})">
-                                <i class="fas fa-trash"></i> Xóa
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        })
-        .catch(error => {
-            console.error('Lỗi khi lấy danh sách nhân viên:', error);
-            const tableBody = document.getElementById('nhanVienTableBody');
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Lỗi khi tải danh sách nhân viên</td></tr>`;
-        });
-}
-// Hàm ánh xạ giá trị chức vụ thô thành dạng hiển thị
-function formatChucVu(chucVu) {
-    const chucVuMap = {
-        'quan_ly': 'Quản lý',
-        'thu_ngan': 'Thu ngân',
-        'pha_che': 'Pha chế',
-        'phuc_vu': 'Phục vụ',
-        'giao_hang': 'Giao hàng'
-    };
-    return chucVuMap[chucVu] || chucVu; // Nếu không tìm thấy ánh xạ, trả về giá trị gốc
-}
-        // Thêm nhân viên
-        document.getElementById('addNhanVienForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
 
-            fetch('/api/nhan-vien', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                alert(result.message);
-                document.getElementById('addNhanVienForm').reset();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addNhanVienModal'));
-                modal.hide();
-                loadNhanViens();
-            })
-            .catch(error => console.error('Lỗi khi thêm nhân viên:', error));
-        });
+                try {
+                    const response = await fetch(`{{ route('nhanviens.suggestPhone') }}?search=${encodeURIComponent(search)}`);
+                    const suggestions = await response.json();
 
-        // Sửa nhân viên
-        function editNhanVien(id) {
-    if (!id || id === 'undefined') {
-        alert('ID nhân viên không hợp lệ!');
-        return;
-    }
-    fetch(`/api/nhan-vien/${id}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(nhanVien => {
-            if (!nhanVien.id) {
-                alert('Không tìm thấy ID nhân viên trong dữ liệu trả về!');
-                return;
-            }
-            document.getElementById('edit_id').value = nhanVien.id;
-            document.getElementById('edit_ho_ten').value = nhanVien.ho_ten || '';
-            document.getElementById('edit_email').value = nhanVien.email || '';
-            document.getElementById('edit_so_dien_thoai').value = nhanVien.so_dien_thoai || '';
-            document.getElementById('edit_chuc_vu').value = nhanVien.chuc_vu || '';
-            const modal = new bootstrap.Modal(document.getElementById('editNhanVienModal'));
-            modal.show();
-        })
-        .catch(error => {
-            console.error('Lỗi khi lấy thông tin nhân viên:', error);
-            alert('Lỗi khi lấy thông tin nhân viên: ' + error.message);
-        });
-}
+                   
 
-document.getElementById('editNhanVienForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const id = document.getElementById('edit_id').value; // Lấy ID trực tiếp từ input
-    if (!id) {
-        alert('ID nhân viên không hợp lệ!');
-        return;
-    }
-
-    const data = {
-        ho_ten: document.getElementById('edit_ho_ten').value,
-        email: document.getElementById('edit_email').value,
-        mat_khau: document.getElementById('edit_mat_khau').value,
-        so_dien_thoai: document.getElementById('edit_so_dien_thoai').value,
-        chuc_vu: document.getElementById('edit_chuc_vu').value
-    };
-
-    fetch(`/api/nhan-vien/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
-        return response.json();
-    })
-    .then(result => {
-        alert(result.message || 'Cập nhật nhân viên thành công!');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editNhanVienModal'));
-        modal.hide();
-        loadNhanViens();
-    })
-    .catch(error => {
-        console.error('Lỗi khi cập nhật nhân viên:', error);
-        alert('Lỗi khi cập nhật nhân viên: ' + error.message);
-    });
-});
-        // Xóa nhân viên
-        function deleteNhanVien(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
-                fetch(`/api/nhan-vien/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json'
+ if (suggestions.length > 0) {
+                        autocompleteSuggestions.innerHTML = suggestions.map(suggestion => `
+                            <div class="autocomplete-suggestion">${suggestion}</div>
+                        `).join('');
+                        autocompleteSuggestions.style.display = 'block';
+                    } else {
+                        autocompleteSuggestions.style.display = 'none';
                     }
-                })
-                .then(response => response.json())
-                .then(result => {
-                    alert(result.message);
-                    loadNhanViens();
-                })
-                .catch(error => console.error('Lỗi khi xóa nhân viên:', error));
-            }
-        }
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                    autocompleteSuggestions.style.display = 'none';
+                }
+            }, 300);
 
-        // Load danh sách nhân viên khi trang được tải
-        window.onload = loadNhanViens;
+            // Xử lý khi người dùng nhập vào ô tìm kiếm
+            soDienThoaiSearch.addEventListener('input', function() {
+                const searchValue = this.value.trim();
+                fetchSuggestions(searchValue);
+
+                // Nếu ô tìm kiếm trống, gửi form ngay lập tức
+                if (searchValue.length === 0) {
+                    debouncedSubmit();
+                }
+            });
+
+            // Xử lý khi người dùng click vào gợi ý
+            autocompleteSuggestions.addEventListener('click', function(e) {
+                if (e.target.classList.contains('autocomplete-suggestion')) {
+                    soDienThoaiSearch.value = e.target.textContent;
+                    autocompleteSuggestions.style.display = 'none';
+                    filterForm.submit(); // Gửi form ngay khi chọn gợi ý
+                }
+            });
+
+            // Ẩn gợi ý khi click ra ngoài
+            document.addEventListener('click', function(e) {
+                if (!soDienThoaiSearch.contains(e.target) && !autocompleteSuggestions.contains(e.target)) {
+                    autocompleteSuggestions.style.display = 'none';
+                }
+            });
+
+            // Gửi form khi người dùng nhấn Enter
+            soDienThoaiSearch.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    autocompleteSuggestions.style.display = 'none';
+                    filterForm.submit();
+                }
+            });
+        });
     </script>
 </body>
 </html>

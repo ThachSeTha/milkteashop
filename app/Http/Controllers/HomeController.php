@@ -23,7 +23,7 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $sanPhams = SanPham::orderBy('id', 'desc')->take(6)->get();
+        $sanPhams = SanPham::all();
 
         return view('home', compact('sanPhams'));
     }
