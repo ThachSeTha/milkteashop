@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChucVuController;
 use App\Http\Controllers\NhanVienController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\DanhMucController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -76,6 +77,15 @@ Route::middleware(['auth', 'web'])->group(function () {
         'edit' => 'roles.edit',
         'update' => 'roles.update',
         'destroy' => 'roles.destroy',
+    ]);
+    Route::resource('/admin/danhmuc', DanhMucController::class)->names([
+        'index' => 'danhmuc.index',
+        'create' => 'danhmuc.create',
+        'store' => 'danhmuc.store',
+        'show' => 'danhmuc.show',
+        'edit' => 'danhmuc.edit',
+        'update' => 'danhmuc.update',
+        'destroy' => 'danhmuc.destroy',
     ]);
 });
 

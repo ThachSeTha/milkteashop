@@ -252,6 +252,11 @@
                         <i class="fas fa-user-shield"></i> Quản lý Role
                     </a>
                 </li>
+                <li class="mb-3">
+                    <a href="{{ route('danhmuc.index') }}" class="block">
+                        <i class="fas fa-user-shield"></i> Quản lý Danh Mục
+                    </a>
+                </li>
             </ul>
         </div>
         

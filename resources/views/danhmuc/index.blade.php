@@ -240,42 +240,19 @@
             align-items: center;
             gap: 12px;
         }
-        .toast::before {
-            content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(135deg, #5a67d8, #34d399, #f59e0b); /* Gradient border */
-    z-index: -1;
-    border-radius: 14px; /* Slightly larger radius to account for border width */
-}
-.toast i {
-    font-size: 1.2rem;
-    color: #34d399; /* Green icon to match the success theme */
-}
         .toast.show {
             display: flex;
         }
+        .toast i {
+            font-size: 1.2rem;
+        }
         .toast.hide {
     animation: fadeOut 0.5s ease-in forwards;
-}
-@keyframes slideInToast {
-    from {
-        opacity: 0;
-        transform: translateY(100%); /* Start from the right (off-screen) */
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0); /* Slide to its final position */
-    }
 }
 @keyframes fadeOut {
     from { opacity: 1; }
     to { opacity: 0; }
 }
-     
         .empty-state {
             text-align: center;
             padding: 50px 20px;
@@ -314,12 +291,12 @@
         <div class="header">
             <h1>
                 <i class="fas fa-briefcase"></i>
-                <span>Danh Sách Chức Vụ</span>
+                <span>Danh Sách Danh Mục</span>
             </h1>
             <div class="header-buttons">
                 <button id="addChucVuBtn" class="btn btn-primary">
                     <i class="fas fa-plus-circle"></i>
-                    <span>Thêm chức vụ</span>
+                    <span>Thêm Danh Mục</span>
                 </button>
                 <a href="{{ route('admin.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
@@ -330,13 +307,13 @@
 
         <!-- Table -->
         <div class="table-container">
-            @if($chucVus->isEmpty())
+            @if($danhMucs->isEmpty())
                 <div class="empty-state">
                     <i class="fas fa-briefcase"></i>
-                    <p>Không có chức vụ nào được tìm thấy</p>
+                    <p>Không có danh mục nào được tìm thấy</p>
                     <button id="addChucVuBtnEmpty" class="btn btn-primary">
                         <i class="fas fa-plus-circle"></i>
-                        <span>Thêm chức vụ mới</span>
+                        <span>Thêm danh mục mới</span>
                     </button>
                 </div>
             @else
@@ -344,24 +321,24 @@
                     <thead>
                         <tr>
                             <th><i class="fas fa-id-card mr-2"></i> ID</th>
-                            <th><i class="fas fa-tag mr-2"></i> Tên chức vụ</th>
+                            <th><i class="fas fa-tag mr-2"></i> Tên danh mục</th>
                             <th><i class="fas fa-cogs mr-2"></i> Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($chucVus as $chucVu)
+                        @foreach($danhMucs as $danhMuc)
                             <tr>
-                                <td>{{ $chucVu->id }}</td>
-                                <td>{{ $chucVu->ten_chuc_vu }}</td>
+                                <td>{{ $danhMuc->id }}</td>
+                                <td>{{ $danhMuc->ten_danh_muc }}</td>
                                 <td>
                                     <div class="action-buttons">
                                         <button class="btn-action btn-edit editChucVuBtn" 
-                                                data-id="{{ $chucVu->id }}" 
-                                                data-name="{{ $chucVu->ten_chuc_vu }}">
+                                                data-id="{{ $danhMuc->id }}" 
+                                                data-name="{{ $danhMuc->ten_danh_muc }}">
                                             <i class="fas fa-edit"></i>
                                             <span>Sửa</span>
                                         </button>
-                                        <form action="{{ route('chucvu.destroy', $chucVu->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('danhmuc.destroy', $danhMuc->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-action btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa chức vụ này?')">
@@ -384,18 +361,18 @@
                 <div class="modal-header">
                     <h2>
                         <i class="fas fa-user-plus"></i>
-                        <span>Thêm chức vụ mới</span>
+                        <span>Thêm danh mục mới</span>
                     </h2>
                     <button class="close-btn" id="closeAddModalBtn">×</button>
                 </div>
-                <form id="addChucVuForm" action="{{ route('chucvu.store') }}" method="POST">
+                <form id="addChucVuForm" action="{{ route('danhmuc.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <label for="chucVuName">
                             <i class="fas fa-tag mr-2"></i>
                             Tên chức vụ
                         </label>
-                        <input type="text" id="chucVuName" name="ten_chuc_vu" required placeholder="Nhập tên chức vụ...">
+                        <input type="text" id="chucVuName" name="ten_danh_muc" required placeholder="Nhập tên danh mục...">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="cancelAddBtn">
@@ -417,7 +394,7 @@
                 <div class="modal-header">
                     <h2>
                         <i class="fas fa-edit"></i>
-                        <span>Sửa chức vụ</span>
+                        <span>Sửa danh mục</span>
                     </h2>
                     <button class="close-btn" id="closeEditModalBtn">×</button>
                 </div>
@@ -427,9 +404,9 @@
                     <div class="modal-body">
                         <label for="editChucVuName">
                             <i class="fas fa-tag mr-2"></i>
-                            Tên chức vụ
+                            Tên danh mục
                         </label>
-                        <input type="text" id="editChucVuName" name="ten_chuc_vu" required placeholder="Nhập tên chức vụ...">
+                        <input type="text" id="editChucVuName" name="ten_danh_muc" required placeholder="Nhập tên chức vụ...">
                         <input type="hidden" id="editChucVuId" name="id">
                     </div>
                     <div class="modal-footer">
@@ -500,7 +477,7 @@
                 editChucVuIdInput.value = chucVuId;
 
                 // Cập nhật action của form sử dụng route Laravel
-                editChucVuForm.action = "{{ route('chucvu.update', ':id') }}".replace(':id', chucVuId);
+                editChucVuForm.action = "{{ route('danhmuc.update', ':id') }}".replace(':id', chucVuId);
 
                 // Hiển thị modal
                 editChucVuModal.style.display = 'flex';
