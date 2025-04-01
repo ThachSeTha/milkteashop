@@ -90,7 +90,7 @@ Route::get('/', function () {
     return view('home', compact('sanPhams'));
 });
 // Routes cho sản phẩm
-Route::resource('sanpham', SanPhamController::class);
+//Route::resource('sanpham', SanPhamController::class);
 Route::get('/sanpham/create', [SanPhamController::class, 'create'])->name('sanphams.create');
 Route::post('/sanpham/store', [SanPhamController::class, 'store'])->name('sanphams.store');
 
@@ -100,7 +100,7 @@ Route::get('/debug-session', function () {
 
 Route::get('/nhanviens', [NhanVienController::class, 'indexView'])->name('nhanvien.index');
 //user
-Route::resource('users', UserController::class);
+//Route::resource('users', UserController::class);
 //Đon hàng
 Route::get('/donhangs', [DonHangController::class, 'indexView'])->name('donhangs.index');
 Route::post('/donhangs/add-to-cart', [DonHangController::class, 'addToCart'])->name('donhangs.addToCart');
@@ -122,13 +122,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gioithieu', [GioiThieuController::class, 'index'])->name('gioithieu');
 Route::get('/lienhe', [LienHeController::class, 'index'])->name('lienhe');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-Route::post('/checkout/add', [CheckoutController::class, 'add'])->name('checkout.add');
-Route::get('/checkout/remove/{id}', [CheckoutController::class, 'removeFromCart'])->name('checkout.remove');
+Route::post('/checkout/add', [CheckoutController::class, 'add'])->name('checkout.add.item');
+Route::post('/checkout/remove/{id}', [CheckoutController::class, 'remove'])->name('checkout.remove');
 Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])->name('checkout.updateQuantity');
 Route::post('/checkout/momo/create', [CheckoutController::class, 'createMoMoOrder'])->name('checkout.momo.create');
 Route::get('/cart/get', [CheckoutController::class, 'getCart'])->name('cart.get');
+Route::post('/checkout/add/{id}', [CheckoutController::class, 'addToCart'])->name('checkout.addToCart');
 // Routes cho MoMo callback
 Route::post('/momo/notify', [CheckoutController::class, 'handleMoMoNotify'])->name('momo.notify');
 Route::get('/momo/return', function () {
@@ -140,12 +141,12 @@ Route::get('/momo/return', function () {
  //Route::post('/register', [RegisterController::class, 'register']);
  use App\Http\Controllers\Auth\ForgotPasswordController;
 
- Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
- Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+ //Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+ //Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
  
  use App\Http\Controllers\Auth\ResetPasswordController;
 
- Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
- Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+ //Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+ //Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
   
 

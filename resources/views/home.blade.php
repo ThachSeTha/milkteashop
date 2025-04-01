@@ -401,7 +401,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ $sanPham->ten_san_pham }}</h5>
                                 <p class="card-text">{{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ</p>
-                                <form action="{{ route('checkout.add', $sanPham->id) }}" method="POST" id="add-to-cart-form-{{ $sanPham->id }}">
+                                <form action="{{ route('checkout.addToCart', $sanPham->id) }}" method="POST" id="add-to-cart-form-{{ $sanPham->id }}">
                                     @csrf
                                     <div class="d-flex justify-content-center">
                                         <button type="button" class="btn btn-primary add-to-cart" data-id="{{ $sanPham->id }}" data-name="{{ $sanPham->ten_san_pham }}" data-price="{{ $sanPham->gia }}">Thêm vào giỏ hàng</button>

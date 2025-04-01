@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+@extends('layouts.app')
+
+@section('title', 'Giới thiệu - MilkTeaShop')
+
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -137,3 +140,11 @@
     </script>
 </body>
 </html>
+{{-- @extends('layouts.app')
+
+@section('title', 'Giới thiệu')
+
+@section('content')
+    <h2>Giới thiệu về chúng tôi</h2>
+    <p>Đây là trang giới thiệu.</p>
+@endsection --}}
