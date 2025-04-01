@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SanPham extends Model
 {
     protected $table = 'san_phams';
-    protected $fillable = ['ten_san_pham', 'mo_ta', 'gia', 'hinh_anh', 'danh_muc_id'];
+    protected $fillable = ['ten_san_pham', 'mo_ta', 'gia', 'hinh_anh', 'danh_mucs_id'];
     
     public function danhMuc(): BelongsTo
     {
-        return $this->belongsTo(DanhMuc::class, 'danh_muc_id');
+        return $this->belongsTo(DanhMuc::class, 'danh_mucs_id');
     }
+  
+ 
 }
 

@@ -244,6 +244,44 @@
             margin-top: 3.5rem;
             text-align: center;
         }
+        .filter-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .filter-container label {
+        margin-right: 1rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .filter-container select {
+        padding: 0.8rem 1.2rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+        background-color: #fff;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="currentColor" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 12px;
+        cursor: pointer;
+    }
+
+    .filter-container select:focus {
+        outline: none;
+        border-color: #ff6b6b;
+        box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+    }
+
+    .filter-container i {
+        margin-left: 0.5rem;
+        color: #ff6b6b;
+    }
 
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(-15px); }
@@ -274,7 +312,17 @@
         <div class="d-flex justify-content-between mb-4 add-sp">
             <a href="{{ route('sanpham.create') }}" class="btn btn-primary">Thêm Sản Phẩm</a>
         </div>
-
+        <form action="{{ route('sanpham.index') }}" method="GET" class="filter-container">
+    <label for="danh_muc_filter">Lọc theo danh mục:</label>
+    <select name="danh_muc_filter" id="danh_muc_filter" onchange="this.form.submit()">
+        <option value="">Tất cả danh mục</option>
+        @foreach($danhMucs as $danhMuc)
+            <option value="{{ $danhMuc->id }}" {{ request('danh_muc_filter') == $danhMuc->id ? 'selected' : '' }}>
+                {{ $danhMuc->ten_danh_muc }}
+            </option>
+        @endforeach
+    </select>
+    <i class="fas fa-filter"></i> </form>
         @if (session('success'))
             <div class="alert-success">{{ session('success') }}</div>
         @endif
@@ -302,7 +350,14 @@
                         <td>
                             <img src="{{ asset($sp->hinh_anh) }}" alt="Hình sản phẩm">
                         </td>
-                        <td>{{ $sp->danhMuc->ten_danh_muc ?? 'Không có' }}</td>
+                        <td> 
+                        @if($sp->danhMuc)
+        {{ $sp->danhMuc->ten_danh_muc }}
+    @else
+        Không có danh mục
+    @endif
+
+                        </td>
                         <td class="action-buttons">
                             <a href="{{ route('sanpham.show', $sp->id) }}" class="btn btn-info">Xem</a>
                             <a href="{{ route('sanpham.edit', $sp->id) }}" class="btn btn-warning">Sửa</a>
