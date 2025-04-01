@@ -9,7 +9,6 @@ use App\Models\SanPham;
 use App\Models\Size;
 use App\Models\Topping;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Log;
 use App\Models\Order;
 use App\Models\OrderItem;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -278,84 +277,24 @@ class CheckoutController extends Controller
         }
     }
     public function syncCart(Request $request)
-{
+    {
     try {
         $cartItems = $request->input('cartItems', []);
-
-        // Log the incoming cartItems for debugging
-        Log::info('Cart items received for syncing:', $cartItems);
-
-        if (empty($cartItems)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không có sản phẩm nào để đồng bộ!',
-            ], 400);
-        }
-
         $userId = Auth::id();
         $sessionId = Session::getId();
 
         foreach ($cartItems as $item) {
-            // Validate required fields
-            if (!isset($item['san_pham_id']) || !is_numeric($item['san_pham_id'])) {
-                Log::error('Invalid san_pham_id in cart item:', $item);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sản phẩm không hợp lệ: san_pham_id không hợp lệ!',
-                ], 400);
-            }
-
-            // Validate so_luong
-            $soLuong = isset($item['so_luong']) && is_numeric($item['so_luong']) ? (int)$item['so_luong'] : 1;
-            if ($soLuong < 1) {
-                $soLuong = 1;
-            }
-
-            // Check if san_pham_id exists in the san_pham table
-            $sanPhamExists = \App\Models\SanPham::where('id', $item['san_pham_id'])->exists();
-            if (!$sanPhamExists) {
-                Log::error('SanPham not found for san_pham_id:', ['san_pham_id' => $item['san_pham_id']]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sản phẩm không tồn tại: san_pham_id ' . $item['san_pham_id'],
-                ], 400);
-            }
-
-            // Validate size_id if provided
-            if (isset($item['size_id']) && !empty($item['size_id'])) {
-                $sizeExists = \App\Models\Size::where('id', $item['size_id'])->exists();
-                if (!$sizeExists) {
-                    Log::error('Size not found for size_id:', ['size_id' => $item['size_id']]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Kích thước không tồn tại: size_id ' . $item['size_id'],
-                    ], 400);
-                }
-            }
-
-            // Validate topping_id if provided
-            if (isset($item['topping_id']) && !empty($item['topping_id'])) {
-                $toppingExists = \App\Models\Topping::where('id', $item['topping_id'])->exists();
-                if (!$toppingExists) {
-                    Log::error('Topping not found for topping_id:', ['topping_id' => $item['topping_id']]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Topping không tồn tại: topping_id ' . $item['topping_id'],
-                    ], 400);
-                }
-            }
-
             GioHang::updateOrCreate(
                 [
                     'user_id' => $userId,
-                    'session_id' => $userId ? null : $sessionId,
-                    'san_pham_id' => $item['san_pham_id'],
-                    'size_id' => $item['size_id'] ?? null,
-                    'topping_id' => $item['topping_id'] ?? null,
+                    'session_id' => null,
+                    'san_pham_id' => $item['id'],
+                    'size_id' => null,
+                    'topping_id' => null,
                 ],
                 [
-                    'so_luong' => $soLuong,
-                    'ghi_chu' => $item['ghi_chu'] ?? null,
+                    'so_luong' => $item['so_luong'] ?? 1,
+                    'ghi_chu' => null,
                 ]
             );
         }
@@ -365,13 +304,12 @@ class CheckoutController extends Controller
             'message' => 'Giỏ hàng đã được đồng bộ thành công!',
         ]);
     } catch (\Exception $e) {
-        Log::error('Error syncing cart:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         return response()->json([
             'success' => false,
-            'message' => 'Có lỗi xảy ra khi đồng bộ giỏ hàng: ' . $e->getMessage(),
+            'message' => 'Có lỗi xảy ra khi đồng bộ giỏ hàng!',
         ], 500);
     }
-}
+    }
     public function createMoMoOrder(Request $request)
     {
         try {
