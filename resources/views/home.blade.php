@@ -518,7 +518,30 @@
                 }
             }
         }
-
+        // Đồng bộ giỏ hàng từ localStorage khi vào trang checkout
+        if (window.location.pathname === '/checkout') {
+            const cart = getCart();
+            if (cart.length > 0 && !isLoggedIn) {
+                fetch('/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ cart_items: cart })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        localStorage.removeItem('cart');
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error syncing cart:', error);
+                });
+            }
+        }
         // Hàm cập nhật modal giỏ hàng
         function updateCartModal() {
             if (isLoggedIn) return; // Nếu đã đăng nhập, không cần cập nhật từ Local Storage
@@ -526,6 +549,11 @@
             const cart = getCart();
             const cartItemsDiv = document.getElementById('cart-items');
             const cartTotalSpan = document.getElementById('cart-total');
+            const checkoutButton = document.getElementById('checkout-button');
+
+            if (cartItemsDiv && cartTotalSpan && checkoutButton) {
+                // Thực hiện các thao tác
+            }
 
             if (!cartItemsDiv || !cartTotalSpan) return;
 
@@ -721,19 +749,67 @@
         // Cập nhật số lượng giỏ hàng khi tải trang
         updateCartCount();
         let lastScrollTop = 0;
-const navbar = document.querySelector(".navbar");
+        const navbar = document.querySelector(".navbar");
 
-window.addEventListener("scroll", function () {
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        window.addEventListener("scroll", function () {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-    if (scrollTop > lastScrollTop) {
-        navbar.style.top = "-60px"; // Ẩn navbar khi cuộn xuống
-    } else {
-        navbar.style.top = "0"; // Hiện navbar khi cuộn lên
-    }
-    lastScrollTop = scrollTop;
-});
+            if (scrollTop > lastScrollTop) {
+                navbar.style.top = "-100px"; // Ẩn navbar khi cuộn xuống
+            } else {
+                navbar.style.top = "0"; // Hiện navbar khi cuộn lên
+            }
+            lastScrollTop = scrollTop;
+        });
 
+        document.querySelectorAll('.increase-quantity').forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('.quantity-input');
+                if (input) {
+                    let quantity = parseInt(input.value);
+                    quantity++;
+                    input.value = quantity;
+                    updateQuantity(input);
+                }
+            });
+        });
+
+        document.querySelectorAll('.decrease-quantity').forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('.quantity-input');
+                if (input) {
+                    let quantity = parseInt(input.value);
+                    if (quantity > 1) {
+                        quantity--;
+                        input.value = quantity;
+                        updateQuantity(input);
+                    }
+                }
+            });
+        });
+
+        // Xử lý đặt hàng
+        function placeOrder(formData) {
+            fetch('{{ route('checkout.placeOrder') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message, 'danger');
+                    return;
+                }
+                // Xử lý thành công
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Có lỗi xảy ra khi đặt hàng!', 'danger');
+            });
+        }
     </script>
 </body>
 </html>

@@ -15,6 +15,9 @@
                 <li class="mb-2"><a href="#" class="block p-2 hover:bg-blue-700">Dashboard</a></li>
                 <li class="mb-2"><a href="#" class="block p-2 hover:bg-blue-700">Quản lý nhân viên</a></li>
                 <li class="mb-2"><a href="{{ route('sanpham.index') }}" class="block p-2 hover:bg-blue-700">Quản lý sản phẩm</a></li>
+                <li class="mb-2"><a href="{{ route('nhanviens.index') }}" class="block p-2 hover:bg-blue-700">Quản lý nhân viên </a></li>
+                <li class="mb-2"><a href="{{ route('users.index') }}" class="block p-2 hover:bg-blue-700">Quản lý User</a></li>
+                <li class="mb-2"><a href="{{ route('chucvu.index') }}" class="block p-2 hover:bg-blue-700">Quản lý Vai Trò</a></li>
             </ul>
         </div>
         

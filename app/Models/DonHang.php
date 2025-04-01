@@ -10,6 +10,11 @@ class DonHang extends Model
     protected $fillable = [
         'ma_don_hang',
         'user_id',
+        'name',
+        'phone',
+        'address',
+        'hinh_thuc_giao_hang', // Thêm trường này
+        'payment_method',
         'tong_tien',
         'trang_thai',
     ];

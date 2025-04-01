@@ -50,8 +50,30 @@
                     <th>Hành động</th>
                 </tr>
             </thead>
-            <tbody id="nhanVienTableBody">
-                <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+            <tbody  >
+                @foreach($nhanViens as $nhanVien)
+                <tr>
+                    <td>{{ $nhanVien->id }}</td>
+                    <td>{{ $nhanVien->ho_ten }}</td>
+                    <td>{{ $nhanVien->email }}</td>
+                    <td>{{ $nhanVien->so_dien_thoai }}</td>
+                    {{-- <td>@if($nhanVien->chuc_vu)
+                        {{ formatChucVu($nhanVien->chuc_vu) }}
+                    @else
+                        N/A
+                    @endif</td> --}}
+                    <td>
+                        <button class="btn btn-warning btn-action" onclick="editNhanVien({{ $nhanVien->id }})">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                        <button class="btn btn-danger btn-action" onclick="deleteNhanVien({{ $nhanVien->id }})">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </td>
+                 
+                    
+                </tr>
+            @endforeach
             </tbody>
         </table>
     </div>
@@ -287,7 +309,7 @@ document.getElementById('editNhanVienForm').addEventListener('submit', function(
     fetch(`/api/nhan-vien/${id}`, {
         method: 'PUT',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json',~
             'Accept': 'application/json'
         },
         body: JSON.stringify(data)

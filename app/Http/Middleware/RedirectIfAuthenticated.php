@@ -12,9 +12,9 @@ class RedirectIfAuthenticated
     {
         if (Auth::check()) {
             // Kiểm tra role_id để chuyển hướng
-            if (Auth::user()->role_id == 1) {
+            if (Auth::user()->role_id == 7) {
                 return redirect()->route('admin.index'); // Admin về trang admin
-            } elseif (Auth::user()->role_id == 3) {
+            } elseif (Auth::user()->role_id == 8) {
                 return redirect()->route('home'); // Khách hàng về trang chủ
             } else {
                 return redirect('/'); // Người dùng khác về trang mặc định

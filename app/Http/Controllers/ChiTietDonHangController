@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ChiTietDonHang;
+use Illuminate\Http\Request;
+
+class ChiTietDonHangController extends Controller
+{
+    public function index($donHangId)
+    {
+        $chiTietDonHangs = ChiTietDonHang::where('don_hang_id', $donHangId)
+            ->with(['sanPham', 'size', 'topping'])
+            ->get();
+
+        if ($chiTietDonHangs->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy chi tiết đơn hàng!',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $chiTietDonHangs,
+        ]);
+    }
+}
