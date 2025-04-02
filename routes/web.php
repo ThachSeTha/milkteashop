@@ -127,10 +127,12 @@ Route::post('/checkout/remove/{id}', [CheckoutController::class, 'remove'])->nam
 Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])->name('checkout.updateQuantity');
-Route::post('/checkout/momo/create', [CheckoutController::class, 'createMoMoOrder'])->name('checkout.momo.create');
+Route::post('/checkout/sync', [CheckoutController::class, 'syncCart'])->name('checkout.sync');
 Route::get('/cart/get', [CheckoutController::class, 'getCart'])->name('cart.get');
 Route::post('/checkout/add/{id}', [CheckoutController::class, 'addToCart'])->name('checkout.addToCart');
+Route::post('/checkout/update-cart', [CheckoutController::class, 'updateCart'])->name('checkout.updateCart');
 // Routes cho MoMo callback
+Route::post('/checkout/momo/create', [CheckoutController::class, 'createMoMoOrder'])->name('checkout.momo.create');
 Route::post('/momo/notify', [CheckoutController::class, 'handleMoMoNotify'])->name('momo.notify');
 Route::get('/momo/return', function () {
     return redirect()->route('checkout')->with('success', 'Thanh toán MoMo thành công!');

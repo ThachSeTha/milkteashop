@@ -49,10 +49,8 @@ class CheckoutController extends Controller
     public function addToCart(Request $request, $id)
     {
         try {
-            // Tìm sản phẩm trong bảng san_phams
             $sanPham = SanPham::findOrFail($id);
-    
-            // Lấy kích thước mặc định (kích thước đầu tiên trong bảng sizes)
+
             $defaultSize = Size::first();
             if (!$defaultSize) {
                 return response()->json([
@@ -60,48 +58,51 @@ class CheckoutController extends Controller
                     'message' => 'Không tìm thấy kích thước mặc định!',
                 ], 500);
             }
-    
+
             $sessionId = Session::getId();
             $userId = Auth::id();
-    
+
             Log::info('CheckoutController@addToCart - Session ID: ' . $sessionId);
             Log::info('CheckoutController@addToCart - User ID: ' . ($userId ?? 'Guest'));
-    
-            // Tìm sản phẩm trong giỏ hàng
+
+            // Kiểm tra sản phẩm trong giỏ hàng dựa trên cả size_id và topping_id
             $cartItem = GioHang::where([
                 'user_id' => $userId,
                 'session_id' => $userId ? null : $sessionId,
                 'san_pham_id' => $id,
-                'size_id' => $defaultSize->id,
-                'topping_id' => null,
+                'size_id' => $request->input('size_id', $defaultSize->id),
+                'topping_id' => $request->input('topping_id', null),
             ])->first();
-    
+
             if ($cartItem) {
-                // Nếu sản phẩm đã tồn tại, tăng số lượng
                 $cartItem->so_luong += ($request->so_luong ?? 1);
             } else {
-                // Nếu sản phẩm chưa tồn tại, tạo mới
                 $cartItem = new GioHang();
-                $cartItem->user_id = $userId; // user_id có thể là NULL nếu người dùng chưa đăng nhập
+                $cartItem->user_id = $userId;
                 $cartItem->session_id = $userId ? null : $sessionId;
                 $cartItem->san_pham_id = $id;
-                $cartItem->size_id = $defaultSize->id;
-                $cartItem->topping_id = null;
+                $cartItem->size_id = $request->input('size_id', $defaultSize->id);
+                $cartItem->topping_id = $request->input('top Wping_id', null);
                 $cartItem->so_luong = $request->so_luong ?? 1;
-                $cartItem->ghi_chu = null;
+                $cartItem->ghi_chu = $request->input('ghi_chu', null);
             }
-    
-            // Tính thành tiền (giá sản phẩm * số lượng)
-            $cartItem->thanh_tien = $sanPham->gia * $cartItem->so_luong;
+
+            // Tính thành tiền
+            $size = Size::find($cartItem->size_id);
+            $topping = Topping::find($cartItem->topping_id);
+            $giaSanPham = $sanPham->gia;
+            $giaSize = $size ? $size->price_multiplier : 0;
+            $giaTopping = $topping ? $topping->price : 0;
+            $cartItem->thanh_tien = ($giaSanPham + $giaSize + $giaTopping) * $cartItem->so_luong;
             $cartItem->save();
-    
+
             Log::info('CheckoutController@addToCart - Cart Item Saved: ' . $cartItem->toJson());
-    
+
             $message = 'Sản phẩm đã được thêm vào giỏ hàng!';
             if ($request->has('buy_now') && $request->input('buy_now') == 1) {
                 $message = 'Sản phẩm đã được thêm vào giỏ hàng! Vui lòng kiểm tra và đặt hàng.';
             }
-    
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -119,84 +120,99 @@ class CheckoutController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate dữ liệu từ form
-        $request->validate([
-            'ten_khach_hang' => 'required|string|max:255',
-            'so_dien_thoai' => 'required|string|max:15',
-            'email' => 'required|email',
-            'hinh_thuc_giao_hang' => 'required|in:delivery,pickup',
-            'dia_chi' => 'required_if:hinh_thuc_giao_hang,delivery|string',
-            'tinh_thanh' => 'required_if:hinh_thuc_giao_hang,delivery|string',
-            'quan_huyen' => 'required_if:hinh_thuc_giao_hang,delivery|string',
-            'phuong_xa' => 'required_if:hinh_thuc_giao_hang,delivery|string',
-        ]);
-
-        // Lấy session_id và user_id
-        $sessionId = Session::getId();
-        $userId = Auth::id();
-
-        // Lấy giỏ hàng
-        $cartItems = GioHang::where(function ($query) use ($userId, $sessionId) {
-            if ($userId) {
-                $query->where('user_id', $userId);
-            } else {
-                $query->where('session_id', $sessionId);
-            }
-        })
-            ->with(['sanPham', 'size', 'topping'])
-            ->get();
-
-        if ($cartItems->isEmpty()) {
-            return redirect()->route('checkout')->with('error', 'Giỏ hàng của bạn đang trống!');
-        }
-
-        // Tính tổng tiền
-        $total = 0;
-        foreach ($cartItems as $item) {
-            $giaSanPham = $item->sanPham->gia;
-            $giaSize = $item->size ? $item->size->price_multiplier : 0;
-            $giaTopping = $item->topping ? $item->topping->price : 0;
-            $item->thanh_tien = ($giaSanPham + $giaSize + $giaTopping) * $item->so_luong;
-            $total += $item->thanh_tien;
-        }
-
-        // Tạo đơn hàng
-        $order = Order::create([
-            'ten_khach_hang' => $request->input('ten_khach_hang'),
-            'so_dien_thoai' => $request->input('so_dien_thoai'),
-            'email' => $request->input('email'),
-            'hinh_thuc_giao_hang' => $request->input('hinh_thuc_giao_hang'),
-            'dia_chi' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('dia_chi') : null,
-            // 'tinh_thanh' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('tinh_thanh') : null,
-            // 'quan_huyen' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('quan_huyen') : null,
-            // 'phuong_xa' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('phuong_xa') : null,
-            'tong_tien' => $total,
-            'trang_thai' => 'pending',
-        ]);
-
-        // Lưu chi tiết đơn hàng
-        foreach ($cartItems as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'san_pham_id' => $item->san_pham_id,
-                'kich_thuoc' => $item->size ? $item->size->name : null,
-                'topping' => $item->topping ? $item->topping->name : null,
-                'so_luong' => $item->so_luong,
-                'thanh_tien' => $item->thanh_tien,
-                'ghi_chu' => $item->ghi_chu,
+        try {
+            // Validate dữ liệu đầu vào
+            $request->validate([
+                'ten_khach_hang' => 'required|string|max:255',
+                'so_dien_thoai' => 'required|string|max:15',
+                'email' => 'required|email',
+                'hinh_thuc_giao_hang' => 'required|in:delivery,pickup',
+                'dia_chi' => 'required_if:hinh_thuc_giao_hang,delivery|string',
+                'tinh_thanh' => 'required_if:hinh_thuc_giao_hang,delivery|string',
+                'quan_huyen' => 'required_if:hinh_thuc_giao_hang,delivery|string',
+                'phuong_xa' => 'required_if:hinh_thuc_giao_hang,delivery|string',
+                'payment_method' => 'required|in:cod,momo',
             ]);
-        }
 
-        // Xóa giỏ hàng sau khi đặt hàng
-        GioHang::where(function ($query) use ($userId, $sessionId) {
-            if ($userId) {
-                $query->where('user_id', $userId);
-            } else {
-                $query->where('session_id', $sessionId);
+            $sessionId = Session::getId();
+            $userId = Auth::id();
+
+            // Lấy giỏ hàng
+            $cartItems = GioHang::where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })
+                ->with(['sanPham', 'size', 'topping'])
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Giỏ hàng của bạn đang trống!'
+                ], 400);
             }
-        })->delete();
 
-        return redirect('/')->with('success', 'Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
+            // Tính tổng tiền
+            $total = 0;
+            foreach ($cartItems as $item) {
+                $giaSanPham = $item->sanPham->gia;
+                $giaSize = $item->size ? $item->size->price_multiplier : 0;
+                $giaTopping = $item->topping ? $item->topping->price : 0;
+                $item->thanh_tien = ($giaSanPham + $giaSize + $giaTopping) * $item->so_luong;
+                $total += $item->thanh_tien;
+            }
+
+            // Tạo đơn hàng
+            $order = Order::create([
+                'ten_khach_hang' => $request->input('ten_khach_hang'),
+                'so_dien_thoai' => $request->input('so_dien_thoai'),
+                'email' => $request->input('email'),
+                'hinh_thuc_giao_hang' => $request->input('hinh_thuc_giao_hang'),
+                'dia_chi' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('dia_chi') : null,
+                'tinh_thanh' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('tinh_thanh') : null,
+                'quan_huyen' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('quan_huyen') : null,
+                'phuong_xa' => $request->input('hinh_thuc_giao_hang') === 'delivery' ? $request->input('phuong_xa') : null,
+                'tong_tien' => $total,
+                'trang_thai' => 'pending',
+                'payment_method' => $request->input('payment_method'),
+            ]);
+
+            // Tạo chi tiết đơn hàng
+            foreach ($cartItems as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'san_pham_id' => $item->san_pham_id,
+                    'kich_thuoc' => $item->size ? $item->size->name : null,
+                    'topping' => $item->topping ? $item->topping->name : null,
+                    'so_luong' => $item->so_luong,
+                    'thanh_tien' => $item->thanh_tien,
+                    'ghi_chu' => $item->ghi_chu,
+                ]);
+            }
+
+            // Xóa giỏ hàng trong cơ sở dữ liệu
+            GioHang::where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm.',
+                'order_id' => $order->id,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi đặt hàng: ' . $e->getMessage(),
+            ], 500);
+        }
     }
     public function updateCartItem(Request $request, $id)
     {
@@ -265,95 +281,60 @@ class CheckoutController extends Controller
     public function syncCart(Request $request)
     {
         try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập để đồng bộ giỏ hàng!'], 401);
+            }
+
             $cartItems = $request->input('cartItems', []);
 
-            Log::info('Cart items received for syncing:', $cartItems);
+            // Xóa toàn bộ giỏ hàng cũ của người dùng trong cơ sở dữ liệu
+            GioHang::where('user_id', $user->id)->delete();
 
             if (empty($cartItems)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không có sản phẩm nào để đồng bộ!',
-                ], 400);
+                return response()->json(['success' => true, 'message' => 'Giỏ hàng trống, không có sản phẩm để đồng bộ!']);
             }
 
-            $userId = Auth::id();
-            $sessionId = Session::getId();
-
+            // Thêm các sản phẩm mới từ Local Storage vào cơ sở dữ liệu
             foreach ($cartItems as $item) {
-                if (!isset($item['san_pham_id']) || !is_numeric($item['san_pham_id'])) {
-                    Log::error('Invalid san_pham_id in cart item:', $item);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Sản phẩm không hợp lệ: san_pham_id không hợp lệ!',
-                    ], 400);
+                $sanPhamId = $item['san_pham_id'] ?? null;
+                $soLuong = $item['so_luong'] ?? 1;
+                $sizeId = $item['size_id'] ?? null;
+                $toppingId = $item['topping_id'] ?? null;
+
+                if (!$sanPhamId) {
+                    continue;
                 }
 
-                $soLuong = isset($item['so_luong']) && is_numeric($item['so_luong']) ? (int)$item['so_luong'] : 1;
-                if ($soLuong < 1) {
-                    $soLuong = 1;
+                // Tìm sản phẩm để tính giá
+                $sanPham = SanPham::find($sanPhamId);
+                if (!$sanPham) {
+                    continue;
                 }
 
-                $sanPhamExists = \App\Models\SanPham::where('id', $item['san_pham_id'])->exists();
-                if (!$sanPhamExists) {
-                    Log::error('SanPham not found for san_pham_id:', ['san_pham_id' => $item['san_pham_id']]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Sản phẩm không tồn tại: san_pham_id ' . $item['san_pham_id'],
-                    ], 400);
-                }
+                $size = Size::find($sizeId);
+                $topping = Topping::find($toppingId);
 
-                // Không kiểm tra size_id và topping_id, để chúng là null nếu không có
-                $sizeId = isset($item['size_id']) && is_numeric($item['size_id']) ? (int)$item['size_id'] : null;
-                $toppingId = isset($item['topping_id']) && is_numeric($item['topping_id']) ? (int)$item['topping_id'] : null;
+                $giaSanPham = $sanPham->gia;
+                $giaSize = $size ? $size->price_multiplier : 0;
+                $giaTopping = $topping ? $topping->price : 0;
+                $giaBan = $giaSanPham + $giaSize + $giaTopping;
+                $thanhTien = $giaBan * $soLuong;
 
-                // Nếu size_id hoặc topping_id được cung cấp, kiểm tra tính hợp lệ
-                if ($sizeId) {
-                    $sizeExists = \App\Models\Size::where('id', $sizeId)->exists();
-                    if (!$sizeExists) {
-                        Log::error('Size not found for size_id:', ['size_id' => $sizeId]);
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Kích thước không tồn tại: size_id ' . $sizeId,
-                        ], 400);
-                    }
-                }
-
-                if ($toppingId) {
-                    $toppingExists = \App\Models\Topping::where('id', $toppingId)->exists();
-                    if (!$toppingExists) {
-                        Log::error('Topping not found for topping_id:', ['topping_id' => $toppingId]);
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Topping không tồn tại: topping_id ' . $toppingId,
-                        ], 400);
-                    }
-                }
-
-                GioHang::updateOrCreate(
-                    [
-                        'user_id' => $userId,
-                        'session_id' => $userId ? null : $sessionId,
-                        'san_pham_id' => $item['san_pham_id'],
-                        'size_id' => $sizeId,
-                        'topping_id' => $toppingId,
-                    ],
-                    [
-                        'so_luong' => $soLuong,
-                        'ghi_chu' => $item['ghi_chu'] ?? null,
-                    ]
-                );
+                // Thêm sản phẩm mới vào giỏ hàng
+                GioHang::create([
+                    'user_id' => $user->id,
+                    'san_pham_id' => $sanPhamId,
+                    'size_id' => $sizeId,
+                    'topping_id' => $toppingId,
+                    'so_luong' => $soLuong,
+                    'thanh_tien' => $thanhTien, // Thêm trường thanh_tien
+                ]);
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Giỏ hàng đã được đồng bộ thành công!',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Giỏ hàng đã được đồng bộ thành công!']);
         } catch (\Exception $e) {
-            Log::error('Error syncing cart:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra khi đồng bộ giỏ hàng: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Lỗi khi đồng bộ giỏ hàng: ' . $e->getMessage()], 500);
         }
     }
     public function createMoMoOrder(Request $request)
@@ -529,7 +510,10 @@ class CheckoutController extends Controller
                 ->get();
 
             if ($cartItems->isEmpty()) {
-                return redirect()->route('checkout')->with('error', 'Giỏ hàng của bạn đang trống!');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Giỏ hàng của bạn đang trống!'
+                ]);
             }
 
             // Tính tổng tiền
@@ -549,7 +533,7 @@ class CheckoutController extends Controller
                 'name' => $validated['name'],
                 'phone' => $validated['phone'],
                 'address' => $validated['address'],
-                'hinh_thuc_giao_hang' => $validated['hinh_thuc_giao_hang'], // Lưu hình thức giao hàng
+                'hinh_thuc_giao_hang' => $validated['hinh_thuc_giao_hang'],
                 'payment_method' => $validated['payment_method'],
                 'total' => $total,
                 'status' => $validated['payment_method'] === 'cod' ? 'pending' : 'awaiting_payment',
@@ -572,7 +556,7 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // Xóa giỏ hàng nếu là COD
+            // Xóa giỏ hàng trong cơ sở dữ liệu nếu là COD
             if ($validated['payment_method'] === 'cod') {
                 GioHang::where(function ($query) use ($userId, $sessionId) {
                     if ($userId) {
@@ -585,12 +569,14 @@ class CheckoutController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Đặt hàng thành công! Chúng tôi sẽ liên hệ bạn sớm.',
+                    'clearCart' => true // Thêm flag để phía client xóa Local Storage
                 ]);
             }
 
             return response()->json([
                 'success' => true,
                 'order_id' => $donHang->id,
+                'clearCart' => true // Thêm flag để phía client xóa Local Storage
             ]);
 
         } catch (\Exception $e) {
@@ -761,6 +747,68 @@ class CheckoutController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Xử lý thông báo thành công']);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
+        }
+    }
+    public function updateCart(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập để cập nhật giỏ hàng!'], 401);
+            }
+
+            $cartItems = $request->input('cartItems', []);
+
+            if (empty($cartItems)) {
+                return response()->json(['success' => false, 'message' => 'Không có sản phẩm để cập nhật!'], 400);
+            }
+
+            foreach ($cartItems as $item) {
+                $gioHang = GioHang::where('id', $item['id'])
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($gioHang) {
+                    $soLuong = $item['so_luong'] ?? 1;
+                    if ($soLuong < 1) {
+                        $gioHang->delete();
+                    } else {
+                        $gioHang->so_luong = $soLuong;
+                        $gioHang->save();
+                    }
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => 'Cập nhật giỏ hàng thành công!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi khi cập nhật giỏ hàng: ' . $e->getMessage()], 500);
+        }
+    }
+    public function remove($id)
+    {
+        try {
+            $sessionId = Session::getId();
+            $userId = Auth::id();
+
+            $gioHang = GioHang::where('id', $id)
+                ->where(function ($query) use ($userId, $sessionId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->where('session_id', $sessionId);
+                    }
+                })
+                ->first();
+
+            if (!$gioHang) {
+                return response()->json(['success' => false, 'message' => 'Mục giỏ hàng không tồn tại!'], 404);
+            }
+
+            $gioHang->delete();
+
+            return response()->json(['success' => true, 'message' => 'Xóa sản phẩm thành công!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi khi xóa sản phẩm: ' . $e->getMessage()], 500);
         }
     }
 }

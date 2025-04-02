@@ -495,7 +495,30 @@
             updateCartCount();
             updateCartModal();
         }
+        function addToCart(sanPhamId, soLuong = 1, sizeId = null, toppingId = null) {
+            const cart = getCart();
+            const existingItem = cart.find(item => 
+                item.san_pham_id === sanPhamId && 
+                item.size_id === sizeId && 
+                item.topping_id === toppingId
+            );
 
+            if (existingItem) {
+                existingItem.so_luong += soLuong;
+            } else {
+                cart.push({
+                    san_pham_id: sanPhamId,
+                    so_luong: soLuong,
+                    size_id: sizeId,
+                    topping_id: toppingId
+                });
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            localStorage.setItem('cartSynced', 'false');
+            updateCartCount();
+            showToast('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+        }
         // Hàm cập nhật số lượng trên biểu tượng giỏ hàng
         function updateCartCount() {
             if (isLoggedIn) {
@@ -789,25 +812,36 @@
         });
 
         // Xử lý đặt hàng
-        function placeOrder(formData) {
-            fetch('{{ route('checkout.placeOrder') }}', {
+        function placeOrder(customerData) {
+            fetch('{{ route("checkout.placeOrder") }}', {
                 method: 'POST',
-                body: formData,
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                },
+                body: JSON.stringify(customerData)
             })
             .then(response => response.json())
             .then(data => {
-                if (!data.success) {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Kiểm tra flag clearCart để xóa Local Storage
+                    if (data.clearCart) {
+                        localStorage.removeItem('cart');
+                        updateCartCount();
+                        updateCartModal();
+                    }
+                    // Nếu thanh toán MoMo, chuyển hướng đến trang thanh toán
+                    if (data.order_id) {
+                        // Xử lý thanh toán MoMo (gọi createMoMoOrder hoặc chuyển hướng)
+                    }
+                } else {
                     showToast(data.message, 'danger');
-                    return;
                 }
-                // Xử lý thành công
             })
             .catch(error => {
-                console.error('Error:', error);
-                showToast('Có lỗi xảy ra khi đặt hàng!', 'danger');
+                console.error('Lỗi khi đặt hàng:', error);
+                showToast('Lỗi khi đặt hàng: ' + error.message, 'danger');
             });
         }
     </script>
