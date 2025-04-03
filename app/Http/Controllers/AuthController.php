@@ -21,7 +21,7 @@ class AuthController extends Controller
     
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-    
+            
             // Kiểm tra vai trò và chuyển hướng
             if (Auth::user()->isAdmin()) {
                 return redirect()->route('admin.index');

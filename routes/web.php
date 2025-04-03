@@ -11,6 +11,8 @@ use App\Http\Controllers\ChucVuController;
 use App\Http\Controllers\NhanVienController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DanhMucController;
+use App\Http\Controllers\GioHangController;
+use App\Http\Controllers\NewsletterController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -18,9 +20,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+Route::get('/products', [SanPhamController::class, 'public'])->name('sanpham.public');
+Route::get('/cart', [GioHangController::class, 'index'])->name('giohangs.index');
 Route::get('/users/phone-suggestions', [UserController::class, 'phoneSuggestions'])->name('users.phone-suggestions');
 Route::get('/nhanviens/suggest-phone', [NhanVienController::class, 'suggestPhoneNumbers'])->name('nhanviens.suggestPhone');
 // Admin Routes (Authenticated)
@@ -88,7 +95,7 @@ Route::middleware(['auth', 'web'])->group(function () {
         'destroy' => 'danhmuc.destroy',
     ]);
 });
-
+Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.detail');
 // Order Routes
 Route::get('/donhangs', [DonHangController::class, 'indexView'])->name('donhangs.index');
 Route::post('/donhangs/add-to-cart', [DonHangController::class, 'addToCart'])->name('donhangs.addToCart');
@@ -98,5 +105,5 @@ Route::post('/donhangs/{id}/cancel', [DonHangController::class, 'cancel'])->name
 
 // Debugging Route
 Route::get('/debug-session', function () {
-    return response()->json(session()->all());
+    dd(session()->all());
 });

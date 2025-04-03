@@ -24,7 +24,7 @@ class HomeController extends Controller
     public function index()
     {
         $sanPhams = SanPham::all();
-
+        $sanPhams = SanPham::with('danhMuc')->paginate(9);
         return view('home', compact('sanPhams'));
     }
 }
