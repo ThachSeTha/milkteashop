@@ -119,11 +119,13 @@ Route::get('/', function () {
     return view('home');
 });
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/gioithieu', [GioiThieuController::class, 'index'])->name('gioithieu');
-Route::get('/lienhe', [LienHeController::class, 'index'])->name('lienhe');
+// Route::get('/gioithieu', [GioiThieuController::class, 'index'])->name('gioithieu');
+// ::get('/lienhe', [LienHeController::class, 'index'])->name('lienhe');
+
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout/add', [CheckoutController::class, 'add'])->name('checkout.add.item');
-Route::post('/checkout/remove/{id}', [CheckoutController::class, 'remove'])->name('checkout.remove');
+Route::post('/checkout/remove/{id}', [CheckoutController::class, 'remove']);
+Route::get('/checkout/remove/{id}', [CheckoutController::class, 'remove'])->name('checkout.remove');
 Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])->name('checkout.updateQuantity');
