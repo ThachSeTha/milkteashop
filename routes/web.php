@@ -107,3 +107,4 @@ Route::post('/donhangs/{id}/cancel', [DonHangController::class, 'cancel'])->name
 Route::get('/debug-session', function () {
     dd(session()->all());
 });
+// Auth::routes();
