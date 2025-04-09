@@ -119,8 +119,8 @@ Route::get('/', function () {
     return view('home');
 });
 Route::get('/', [HomeController::class, 'index'])->name('home');
-// Route::get('/gioithieu', [GioiThieuController::class, 'index'])->name('gioithieu');
-// ::get('/lienhe', [LienHeController::class, 'index'])->name('lienhe');
+Route::get('/gioithieu', [GioiThieuController::class, 'index'])->name('gioithieu');
+Route::get('/lienhe', [LienHeController::class, 'index'])->name('lienhe');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout/add', [CheckoutController::class, 'add'])->name('checkout.add.item');
@@ -130,6 +130,7 @@ Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('chec
 Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])->name('checkout.updateQuantity');
 Route::post('/checkout/sync', [CheckoutController::class, 'syncCart'])->name('checkout.sync');
+
 Route::get('/cart/get', [CheckoutController::class, 'getCart'])->name('cart.get');
 Route::post('/checkout/add/{id}', [CheckoutController::class, 'addToCart'])->name('checkout.addToCart');
 Route::post('/checkout/update-cart', [CheckoutController::class, 'updateCart'])->name('checkout.updateCart');

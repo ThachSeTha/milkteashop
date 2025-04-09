@@ -545,7 +545,7 @@
         if (window.location.pathname === '/checkout') {
             const cart = getCart();
             if (cart.length > 0 && !isLoggedIn) {
-                fetch('/checkout', {
+                fetch('/checkout/sync', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

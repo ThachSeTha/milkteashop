@@ -232,7 +232,7 @@ class CheckoutController extends Controller
             $sessionId = Session::getId();
             $userId = Auth::id();
 
-            $cartItem = GioHang::where('san_pham_id', $id)
+            $cartItem = GioHang::where('id', $id) // Sửa từ san_pham_id thành id
                 ->where(function ($query) use ($userId, $sessionId) {
                     if ($userId) {
                         $query->where('user_id', $userId);
@@ -249,6 +249,16 @@ class CheckoutController extends Controller
                 'ghi_chu' => $request->input('ghi_chu'),
             ]);
 
+            // Tính lại thành tiền
+            $sanPham = SanPham::find($cartItem->san_pham_id);
+            $size = Size::find($cartItem->size_id);
+            $topping = Topping::find($cartItem->topping_id);
+            $giaSanPham = $sanPham->gia;
+            $giaSize = $size ? $size->price_multiplier : 0;
+            $giaTopping = $topping ? $topping->price : 0;
+            $cartItem->thanh_tien = ($giaSanPham + $giaSize + $giaTopping) * $cartItem->so_luong;
+            $cartItem->save();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Giỏ hàng đã được cập nhật!',
@@ -256,7 +266,7 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi cập nhật giỏ hàng!',
+                'message' => 'Có lỗi xảy ra khi cập nhật giỏ hàng: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -285,7 +295,7 @@ class CheckoutController extends Controller
     }
     public function syncCart(Request $request)
     {
-        $cartItems = $request->input('cartItems', []);
+        $cartItems = $request->input('cart_items', []);
     
         Log::info('CheckoutController@syncCart - Cart Items Received: ' . json_encode($cartItems));
     
@@ -299,8 +309,10 @@ class CheckoutController extends Controller
     
         try {
             foreach ($cartItems as $item) {
-                if (!isset($item['san_pham_id']) || !SanPham::find($item['san_pham_id'])) {
-                    Log::error('CheckoutController@syncCart - Invalid san_pham_id: ' . ($item['san_pham_id'] ?? 'missing'));
+                // Kiểm tra tồn tại sản phẩm
+                $sanPham = SanPham::find($item['san_pham_id']);
+                if (!$sanPham) {
+                    Log::error('CheckoutController@syncCart - Invalid san_pham_id: ' . $item['san_pham_id']);
                     continue;
                 }
     
@@ -309,24 +321,15 @@ class CheckoutController extends Controller
                         'user_id' => $user ? $user->id : null,
                         'session_id' => $user ? null : $sessionId,
                         'san_pham_id' => $item['san_pham_id'],
-                        'size_id' => $item['size_id'] ?? null,
-                        'topping_id' => $item['topping_id'] ?? null,
+                        'size_id' => null, // Không dùng size_id/topping_id trong localStorage hiện tại
+                        'topping_id' => null,
                     ],
                     [
                         'so_luong' => $item['so_luong'] ?? 1,
-                        'ghi_chu' => $item['ghi_chu'] ?? '',
+                        'thanh_tien' => ($item['price'] ?? $sanPham->gia) * ($item['so_luong'] ?? 1),
+                        'ghi_chu' => '',
                     ]
                 );
-    
-                $sanPham = SanPham::find($item['san_pham_id']);
-                $size = $item['size_id'] ? Size::find($item['size_id']) : null;
-                $topping = $item['topping_id'] ? Topping::find($item['topping_id']) : null;
-    
-                $giaSanPham = $sanPham->gia;
-                $giaSize = $size ? $size->price_multiplier : 0;
-                $giaTopping = $topping ? $topping->price : 0;
-                $gioHang->thanh_tien = ($giaSanPham + $giaSize + $giaTopping) * $gioHang->so_luong;
-                $gioHang->save();
     
                 Log::info('CheckoutController@syncCart - Synced item: ' . $gioHang->toJson());
             }
@@ -337,6 +340,9 @@ class CheckoutController extends Controller
             return response()->json(['success' => false, 'message' => 'Lỗi khi đồng bộ giỏ hàng: ' . $e->getMessage()]);
         }
     }
+    /**
+     * Tạo đơn hàng MoMo
+     */    
     public function createMoMoOrder(Request $request)
     {
         try {
