@@ -7,17 +7,7 @@ class DonHang extends Model
 {
     protected $table = 'don_hangs';
 
-    protected $fillable = [
-        'ma_don_hang',
-        'user_id',
-        'name',
-        'phone',
-        'address',
-        'hinh_thuc_giao_hang', // Thêm trường này
-        'payment_method',
-        'tong_tien',
-        'trang_thai',
-    ];
+    protected $fillable = ['ho_ten', 'so_dien_thoai', 'hinh_thuc_giao_hang', 'phuong_thuc_thanh_toan', 'trang_thai', 'tong_tien', 'dia_chi_giao_hang'];
 
     // Quan hệ với khách hàng đặt đơn hàng
     public function user()

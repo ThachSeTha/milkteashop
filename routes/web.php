@@ -126,16 +126,20 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout/add', [CheckoutController::class, 'add'])->name('checkout.add.item');
 Route::post('/checkout/remove/{id}', [CheckoutController::class, 'remove']);
 Route::get('/checkout/remove/{id}', [CheckoutController::class, 'remove'])->name('checkout.remove');
+Route::get('/checkout/remove', [CheckoutController::class, 'remove'])->name('checkout.remove');
 Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])->name('checkout.updateQuantity');
 Route::post('/checkout/sync', [CheckoutController::class, 'syncCart'])->name('checkout.sync');
-
+Route::post('/checkout/remove-from-cart', [CheckoutController::class, 'removeFromCart'])->name('checkout.removeFromCart');
+Route::get('/checkout/get-cart', [CheckoutController::class, 'getCart'])->name('checkout.getCart')->middleware('auth');
+Route::post('/checkout/add-to-cart/{id}', [CheckoutController::class, 'addToCart'])->name('checkout.add-to-cart')->middleware('auth');
 Route::get('/cart/get', [CheckoutController::class, 'getCart'])->name('cart.get');
 Route::post('/checkout/add/{id}', [CheckoutController::class, 'addToCart'])->name('checkout.addToCart');
 Route::post('/checkout/update-cart', [CheckoutController::class, 'updateCart'])->name('checkout.updateCart');
 // Routes cho MoMo callback
 Route::post('/checkout/momo/create', [CheckoutController::class, 'createMoMoOrder'])->name('checkout.momo.create');
+Route::get('/checkout/momo/status/{orderId}', [CheckoutController::class, 'checkMoMoStatus'])->name('checkout.momo.status');
 Route::post('/momo/notify', [CheckoutController::class, 'handleMoMoNotify'])->name('momo.notify');
 Route::get('/momo/return', function () {
     return redirect()->route('checkout')->with('success', 'Thanh toán MoMo thành công!');

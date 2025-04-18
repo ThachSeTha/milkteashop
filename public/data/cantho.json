@@ -1,0 +1,10 @@
+{
+    "Cần Thơ": {
+        "Quận Ninh Kiều": ["Phường An Bình", "Phường An Cư", "Phường An Hòa", "Phường An Khánh", "Phường Hưng Lợi"],
+        "Quận Bình Thủy": ["Phường Long Hòa", "Phường Long Tuyền", "Phường Bình Thủy", "Phường Trà An"],
+        "Quận Cái Răng": ["Phường Lê Bình", "Phường Hưng Phú", "Phường Tân Phú", "Phường Thường Thạnh"],
+        "Quận Ô Môn": ["Phường Châu Văn Liêm", "Phường Thới An", "Phường Phước Thới"],
+        "Huyện Phong Điền": ["Xã Nhơn Ái", "Xã Nhơn Nghĩa", "Xã Tân Thới"],
+        "Huyện Cờ Đỏ": ["Xã Thạnh Phú", "Xã Thới Hưng", "Xã Trung Hưng"]
+    }
+}

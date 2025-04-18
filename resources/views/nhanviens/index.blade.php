@@ -57,11 +57,9 @@
                     <td>{{ $nhanVien->ho_ten }}</td>
                     <td>{{ $nhanVien->email }}</td>
                     <td>{{ $nhanVien->so_dien_thoai }}</td>
-                    {{-- <td>@if($nhanVien->chuc_vu)
-                        {{ formatChucVu($nhanVien->chuc_vu) }}
-                    @else
-                        N/A
-                    @endif</td> --}}
+                    <td>
+                        {{ $nhanVien->chuc_vu == 'quan_ly' ? 'Quản lý' : ($nhanVien->chuc_vu == 'thu_ngan' ? 'Thu ngân' : ($nhanVien->chuc_vu == 'pha_che' ? 'Pha chế' : ($nhanVien->chuc_vu == 'phuc_vu' ? 'Phục vụ' : ($nhanVien->chuc_vu == 'giao_hang' ? 'Giao hàng' : $nhanVien->chuc_vu))))}}
+                    </td> 
                     <td>
                         <button class="btn btn-warning btn-action" onclick="editNhanVien({{ $nhanVien->id }})">
                             <i class="fas fa-edit"></i> Sửa
@@ -309,7 +307,7 @@ document.getElementById('editNhanVienForm').addEventListener('submit', function(
     fetch(`/api/nhan-vien/${id}`, {
         method: 'PUT',
         headers: {
-            'Content-Type': 'application/json',~
+            'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
         body: JSON.stringify(data)

@@ -616,28 +616,7 @@
             });
         });
 
-        // Xử lý đặt hàng
-        function placeOrder(formData) {
-            fetch('{{ route('checkout.placeOrder') }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    showToast(data.message, 'danger');
-                    return;
-                }
-                // Xử lý thành công
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Có lỗi xảy ra khi đặt hàng!', 'danger');
-            });
-        }
+        
     </script>
 </body>
 </html>

@@ -306,10 +306,11 @@
                         <td class="action-buttons">
                             <a href="{{ route('sanpham.show', $sp->id) }}" class="btn btn-info">Xem</a>
                             <a href="{{ route('sanpham.edit', $sp->id) }}" class="btn btn-warning">Sửa</a>
-                            <form action="{{ route('sanpham.destroy', $sp->id) }}" method="POST" style="display:inline;">
+                            <form action="{{ route('sanpham.destroy', $sp->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-danger">Xóa</button>
                             </form>
+                            
                         </td>
                     </tr>
                     @endforeach

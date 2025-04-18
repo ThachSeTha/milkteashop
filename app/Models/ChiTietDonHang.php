@@ -10,7 +10,7 @@ use App\Models\Topping;
 class ChiTietDonHang extends Model
 {
     protected $table = 'chi_tiet_don_hangs';
-    protected $fillable = ['don_hang_id', 'san_pham_id', 'so_luong', 'gia_ban', 'size_id', 'topping_id'];
+    protected $fillable = ['don_hang_id', 'san_pham_id', 'so_luong', 'gia_ban', 'size_id', 'topping_id', 'ghi_chu'];
 
     public function donHang()
     {
