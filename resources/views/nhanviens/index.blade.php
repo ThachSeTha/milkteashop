@@ -50,8 +50,28 @@
                     <th>Hành động</th>
                 </tr>
             </thead>
-            <tbody id="nhanVienTableBody">
-                <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+            <tbody  >
+                @foreach($nhanViens as $nhanVien)
+                <tr>
+                    <td>{{ $nhanVien->id }}</td>
+                    <td>{{ $nhanVien->ho_ten }}</td>
+                    <td>{{ $nhanVien->email }}</td>
+                    <td>{{ $nhanVien->so_dien_thoai }}</td>
+                    <td>
+                        {{ $nhanVien->chuc_vu == 'quan_ly' ? 'Quản lý' : ($nhanVien->chuc_vu == 'thu_ngan' ? 'Thu ngân' : ($nhanVien->chuc_vu == 'pha_che' ? 'Pha chế' : ($nhanVien->chuc_vu == 'phuc_vu' ? 'Phục vụ' : ($nhanVien->chuc_vu == 'giao_hang' ? 'Giao hàng' : $nhanVien->chuc_vu))))}}
+                    </td> 
+                    <td>
+                        <button class="btn btn-warning btn-action" onclick="editNhanVien({{ $nhanVien->id }})">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                        <button class="btn btn-danger btn-action" onclick="deleteNhanVien({{ $nhanVien->id }})">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </td>
+                 
+                    
+                </tr>
+            @endforeach
             </tbody>
         </table>
     </div>

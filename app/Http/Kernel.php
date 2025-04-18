@@ -49,8 +49,9 @@ class Kernel extends HttpKernel
      */
     protected $middlewareAliases = [ 
         'redirect.auth' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-         'admin' => \App\Http\Middleware\AdminMiddleware::class, // Thêm dòng này
-       // 'auth' => \App\Http\Middleware\Authenticate::class,
+         //  'admin' => \App\Http\Middleware\AdminMiddleware::class, // Thêm dòng này
+         'admin' => \App\Http\Middleware\CheckAdmin::class,
+         'auth' => \App\Http\Middleware\Authenticate::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];
 }

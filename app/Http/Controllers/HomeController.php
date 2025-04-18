@@ -23,6 +23,11 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
+        //  $sanPhams = SanPham::orderBy('id', 'desc')->take(6)->get();
+         $sanPhams = SanPham::all();
+ 
+        //  return view('home', compact('sanPhams'));
+     
         // Lấy từ khóa tìm kiếm nếu có
         $query = $request->input('query');
 

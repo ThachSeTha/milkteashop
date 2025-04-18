@@ -40,6 +40,21 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+             'driver' => 'session',
+             'provider' => 'admins', // Thêm provider admins
+         ],
+        
+    ],
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+        'admins' => [ // Thêm provider admins
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class, // Thay đổi model nếu cần
+        ],
     ],
 
     /*
