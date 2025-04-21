@@ -24,12 +24,16 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProductController;
 
 // Authentication Routes
+Auth::routes();
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+// Route cho xác nhận OTP
+Route::get('/verify-otp', [AuthController::class, 'showVerifyOtpForm'])->name('verify.otp.form');
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', function () {
@@ -94,14 +98,12 @@ Route::middleware(['auth', 'web'])->group(function () {
         'destroy' => 'roles.destroy',
     ]);
 });
-Auth::routes();
 
 Route::get('/', function () {
     $sanPhams = \App\Models\SanPham::paginate(9);
     return view('home', compact('sanPhams'));
 });
 // Routes cho sản phẩm
-//Route::resource('sanpham', SanPhamController::class);
 Route::get('/sanpham/create', [SanPhamController::class, 'create'])->name('sanphams.create');
 Route::post('/sanpham/store', [SanPhamController::class, 'store'])->name('sanphams.store');
 
@@ -145,8 +147,7 @@ Route::post('/sanpham/store', [SanPhamController::class, 'store'])->name('sanpha
 
 
 Route::get('/nhanviens', [NhanVienController::class, 'indexView'])->name('nhanvien.index');
-//user
-//Route::resource('users', UserController::class);
+
 //Đon hàng
 Route::get('/donhangs', [DonHangController::class, 'indexView'])->name('donhangs.index');
 Route::post('/donhangs/add-to-cart', [DonHangController::class, 'addToCart'])->name('donhangs.addToCart');
@@ -192,19 +193,8 @@ Route::get('/momo/return', function () {
 })->name('momo.return');
 
  //order
- Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');   
- //Route::post('/register', [RegisterController::class, 'register']);
- use App\Http\Controllers\Auth\ForgotPasswordController;
-
- //Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
- //Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
- 
- use App\Http\Controllers\Auth\ResetPasswordController;
-
- //Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
- //Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');   
   
-
 Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.detail');
 // Order Routes
 Route::get('/donhangs', [DonHangController::class, 'indexView'])->name('donhangs.index');
@@ -217,4 +207,3 @@ Route::post('/donhangs/{id}/cancel', [DonHangController::class, 'cancel'])->name
 Route::get('/debug-session', function () {
     dd(session()->all());
 });
- Auth::routes();
