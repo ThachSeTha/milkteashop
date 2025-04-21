@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Thêm Font Awesome để sử dụng biểu tượng -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         
         .product-card {
@@ -223,28 +224,63 @@
             background-color: #FFEA00;
             transform: scale(1.05);
         }
+        /* hero của trang sản phẩm */
+        .hero-section {
+            position: relative;
+            background: url('/uploads/background.jpg') no-repeat center center;
+            background-size: cover;
+            height: 120px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            margin-top: 125px;
+            overflow: hidden; /* Giúp lớp overlay không bị tràn */
+        }
+
+        .hero-section .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 1;
+        }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 2; /* Đảm bảo nội dung nằm trên lớp mờ */
+        }
+        .mt-5 {
+            margin-top: 10rem !important;
+            background-color: rgb(245, 225, 228);
+
+            margin-bottom: 4rem;
+        }
+        /* body trang giới thiệu */
+        body {
+            background-color:  #f3c9d0;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .hero-section h1 {
+            font-size: 2.5rem;
+            color: #f3baba;
+            text-shadow: 5px 2px 4px rgba(53, 51, 51, 0.5);
+            
+        }
+        .hero-section p {
+            font-size: 1.25rem;
+            color:  #f3baba;
+            text-shadow: 5px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
     </style>
 </head>
 <body>
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    <header>
-        <h1>Milk Tea Shop</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ route('gioithieu') }}">Giới thiệu</a></li>
-                <li><a href="{{ route('liên hệ') }}">Liên hệ</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main>
-        @yield('content')
-    </main>
+     
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg bg-dark">
         <div class="container">
@@ -260,13 +296,13 @@
                         <a class="nav-link active" href="/">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/sanpham">Sản phẩm</a>
+                        <a class="nav-link" href="/products">Sản phẩm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Giới thiệu</a>
+                        <a class="nav-link" href="/gioithieu">Giới thiệu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Liên hệ</a>
+                        <a class="nav-link" href="/lienhe">Liên hệ</a>
                     </li>
                     <!-- Thanh tìm kiếm -->
                     <li class="nav-item">
@@ -277,17 +313,26 @@
                     </li>
                     <!-- Tài khoản -->
                     <li class="nav-item">
-                        @if(Auth::check())
-                            <a class="nav-link" href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-user me-1"></i>Đăng xuất
+                        @auth
+                            <div class="dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user"></i> {{ Auth::user()->name }}
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="#">Thông tin cá nhân</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Đăng xuất</a></li>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                        @csrf
+                                    </form>
+                                </ul>
+                            </div>
+                            @else
+                            <a class="nav-link login-icon" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                <i class="fas fa-sign-in-alt"></i> Đăng nhập
                             </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        @else
-                            <a class="nav-link" href="{{ route('login') }}"><i class="fas fa-user me-1"></i>Đăng nhập</a>
-                        @endif
+    
+                        @endauth
                     </li>
                     <!-- Giỏ hàng -->
                     <li class="nav-item position-relative">
@@ -300,7 +345,72 @@
             </div>
         </div>
     </nav>
-
+    <!-- Registration Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">Đăng ký</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('register') }}" method="POST">
+                        @csrf
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
+                            @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required>
+                            @error('phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" value="{{ old('address') }}">
+                            @error('address')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+                            @error('password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="password_confirmation" class="form-label">Xác nhận mật khẩu</label>
+                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Đăng ký</button>
+                    </form>
+                    <p class="mt-3">Đã có tài khoản? <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">Đăng nhập</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modal Giỏ hàng -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -433,35 +543,142 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         // Kiểm tra trạng thái đăng nhập
-        const isLoggedIn = @json(Auth::check());
-
+        const isLoggedIn = @json(Auth::check());        
         // Hàm lấy giỏ hàng từ Local Storage
         function getCart() {
             return JSON.parse(localStorage.getItem('cart')) || [];
-        }
-
+        }        
         // Hàm lưu giỏ hàng vào Local Storage
         function saveCart(cart) {
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartCount();
             updateCartModal();
-        }
+        }       
+        function addToCart(sanPhamId, soLuong = 1, sizeId = null, toppingId = null, name, price, hinhAnh) {
+            console.log('Adding to cart:', { sanPhamId, soLuong, sizeId, toppingId, name, price, hinhAnh });
 
+            if (!sanPhamId || soLuong < 1 || !name || !price) {
+                showToast('Dữ liệu sản phẩm không hợp lệ!', 'danger');
+                console.error('Invalid input data:', { sanPhamId, soLuong, name, price });
+                return;
+            }
+
+            const cart = getCart();
+            const existingItem = cart.find(item => 
+                item.san_pham_id === sanPhamId && 
+                item.size_id === sizeId && 
+                item.topping_id === toppingId
+            );
+
+            if (existingItem) {
+                existingItem.so_luong += soLuong;
+            } else {
+                cart.push({
+                    san_pham_id: sanPhamId,
+                    so_luong: soLuong,
+                    size_id: sizeId,
+                    topping_id: toppingId,
+                    name: name,
+                    price: price,
+                    hinh_anh: hinhAnh || '/images/default-product.jpg',
+                    ghi_chu: ''
+                });
+            }
+
+            try {
+                localStorage.setItem('cart', JSON.stringify(cart));
+                localStorage.setItem('cartSynced', 'false');
+                console.log('Cart saved to localStorage:', cart);
+                updateCartModal(); // Gọi ngay để cập nhật modal
+                updateCartCount(); // Cập nhật số lượng trên biểu tượng giỏ hàng
+                showToast('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                showToast('Có lỗi xảy ra khi lưu giỏ hàng!', 'danger');
+                return;
+            }
+        }       
+        // Hàm lấy giỏ hàng từ server và đồng bộ với localStorage
+        function fetchCartFromServer() {
+            if (!isLoggedIn) return Promise.resolve();
+        
+            return fetch('{{ route("checkout.getCart") }}', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(`Lỗi ${response.status}: ${err.message || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    throw new Error('Dữ liệu trả về không phải là mảng, nhận được: ' + JSON.stringify(data));
+                }
+        
+                const cart = data.map(item => {
+                    if (!item || !item.san_pham_id) {
+                        console.warn('Dữ liệu mục giỏ hàng không hợp lệ:', item);
+                        return null;
+                    }
+        
+                    return {
+                        san_pham_id: item.san_pham_id || '',
+                        so_luong: item.so_luong || 1,
+                        size_id: item.size ? item.size.name : null,
+                        size_price: item.size ? (item.size.price_multiplier || 0) : 0,
+                        topping_id: item.topping ? item.topping.name : null,
+                        topping_price: item.topping ? (item.topping.price || 0) : 0,
+                        name: item.san_pham ? item.san_pham.ten_san_pham : 'Sản phẩm không tồn tại',
+                        price: item.san_pham ? item.san_pham.gia : 0,
+                        hinh_anh: item.san_pham ? (item.san_pham.hinh_anh || 'https://via.placeholder.com/300') : 'https://via.placeholder.com/300',
+                        ghi_chu: item.ghi_chu || ''
+                    };
+                }).filter(item => item !== null);
+        
+                localStorage.setItem('cart', JSON.stringify(cart));
+                localStorage.setItem('cartSynced', 'true');
+                console.log('Cart synced to localStorage:', cart);
+                return cart;
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy giỏ hàng từ server:', error.message);
+                showToast('Có lỗi xảy ra khi lấy giỏ hàng từ server: ' + error.message, 'danger');
+                throw error;
+            });
+        }        
         // Hàm cập nhật số lượng trên biểu tượng giỏ hàng
         function updateCartCount() {
             if (isLoggedIn) {
-                @php
-                    $sessionId = Session::getId();
-                    $userId = Auth::id();
-                    $cartCount = \App\Models\GioHang::where('user_id', $userId)->count();
-                @endphp
-                const cartCount = @json($cartCount);
-                const cartCountElement = document.getElementById('cart-count');
-                if (cartCountElement) {
-                    cartCountElement.textContent = cartCount > 0 ? cartCount : '';
-                }
+                fetch('{{ route("checkout.getCart") }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        const cartCount = data.reduce((total, item) => total + (item.so_luong || 1), 0);
+                        const cartCountElement = document.getElementById('cart-count');
+                        if (cartCountElement) {
+                            cartCountElement.textContent = cartCount > 0 ? cartCount : '';
+                        }
+                    } else {
+                        console.error('Dữ liệu giỏ hàng không hợp lệ:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching cart count:', error);
+                });
             } else {
                 const cart = getCart();
                 const cartCount = cart.reduce((total, item) => total + (item.so_luong || 1), 0);
@@ -470,34 +687,81 @@
                     cartCountElement.textContent = cartCount > 0 ? cartCount : '';
                 }
             }
-        }
+        }        
+        // Đồng bộ giỏ hàng từ localStorage khi vào trang checkout
+        if (window.location.pathname === '/checkout') {
+            const cart = getCart();
+            if (cart.length > 0 && !isLoggedIn) {
+                fetch('/checkout/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ cart_items: cart })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        localStorage.removeItem('cart');
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error syncing cart:', error);
+                });
+            }
+        }       
+        function showToast(message, type = 'success') {
+            let toastWrapper = document.getElementById('toast-wrapper');
+            if (!toastWrapper) {
+                toastWrapper = document.createElement('div');
+                toastWrapper.id = 'toast-wrapper';
+                toastWrapper.style.position = 'fixed';
+                toastWrapper.style.top = '20px';
+                toastWrapper.style.right = '20px';
+                toastWrapper.style.zIndex = '1050';
+                document.body.appendChild(toastWrapper);
+            }
         
+            const toastContainer = document.createElement('div');
+            toastContainer.className = `alert alert-${type} alert-dismissible fade show`;
+            toastContainer.style.minWidth = '300px';
+            toastContainer.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            toastWrapper.appendChild(toastContainer);
+        
+            setTimeout(() => {
+                toastContainer.remove();
+            }, 3000);
+        }
+       
         // Hàm cập nhật modal giỏ hàng
         function updateCartModal() {
-            if (isLoggedIn) return; // Nếu đã đăng nhập, không cần cập nhật từ Local Storage
-
             const cart = getCart();
             const cartItemsDiv = document.getElementById('cart-items');
             const cartTotalSpan = document.getElementById('cart-total');
-            const checkoutButton = document.getElementById('checkout-button');
-
-            if (cartItemsDiv && cartTotalSpan && checkoutButton) {
-                // Thực hiện các thao tác
+        
+            if (!cartItemsDiv || !cartTotalSpan) {
+                console.error('Không tìm thấy cart-items hoặc cart-total trong modal');
+                return;
             }
-
-            if (!cartItemsDiv || !cartTotalSpan) return;
-
+        
             if (cart.length === 0) {
                 cartItemsDiv.innerHTML = '<p class="text-center">Giỏ hàng của bạn đang trống.</p>';
                 cartTotalSpan.textContent = '0';
                 return;
             }
-
+        
             let html = `
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Sản phẩm</th>
+                            <th>Kích thước</th>
+                            <th>Topping</th>
                             <th>Số lượng</th>
                             <th>Thành tiền</th>
                             <th>Hành động</th>
@@ -506,22 +770,28 @@
                     <tbody>
             `;
             let total = 0;
-
+        
             cart.forEach((item, index) => {
-                const thanhTien = item.price * (item.so_luong || 1);
+                const sizePrice = item.size_price || 0;
+                const toppingPrice = item.topping_price || 0;
+                const soLuong = item.so_luong || 1;
+                const thanhTien = (item.price + sizePrice + toppingPrice) * soLuong;
                 total += thanhTien;
+        
                 html += `
                     <tr>
                         <td>${item.name}</td>
-                        <td>${item.so_luong || 1}</td>
+                        <td>${item.size_id || 'Không chọn'}</td>
+                        <td>${item.topping_id || 'Không có'}</td>
+                        <td>${soLuong}</td>
                         <td>${thanhTien.toLocaleString('vi-VN')} VNĐ</td>
                         <td>
-                            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${index})">Xóa</button>
+                            <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.san_pham_id}')">Xóa</button>
                         </td>
                     </tr>
                 `;
             });
-
+        
             html += `
                     </tbody>
                 </table>
@@ -529,23 +799,158 @@
             cartItemsDiv.innerHTML = html;
             cartTotalSpan.textContent = total.toLocaleString('vi-VN');
         }
-
+        
         // Hàm xóa sản phẩm khỏi giỏ hàng
-        function removeFromCart(index) {
-            const cart = getCart();
-            cart.splice(index, 1);
-            saveCart(cart);
+        function removeFromCart(sanPhamId) {
+            if (isLoggedIn) {
+                fetch('{{ route("checkout.remove", ["id" => ":id"]) }}'.replace(':id', sanPhamId), {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fetchCartFromServer().then(() => {
+                            showToast('Sản phẩm đã được xóa khỏi giỏ hàng!', 'success');
+                        });
+                    } else {
+                        showToast(data.message || 'Có lỗi xảy ra khi xóa sản phẩm!', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Có lỗi xảy ra khi xóa sản phẩm!', 'danger');
+                });
+            } else {
+                const cart = getCart();
+                const index = cart.findIndex(item => item.san_pham_id === sanPhamId);
+                if (index >= 0) {
+                    cart.splice(index, 1);
+                    saveCart(cart);
+                    showToast('Sản phẩm đã được xóa khỏi giỏ hàng!', 'success');
+                } else {
+                    showToast('Không tìm thấy sản phẩm để xóa!', 'danger');
+                }
+            }
         }
+        
+        // Xử lý nút "Thêm vào giỏ hàng"
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', async function() { // Thêm async để sử dụng await
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const price = parseInt(this.getAttribute('data-price'));
+                const hinhAnh = this.getAttribute('data-hinh-anh');
 
+                if (isLoggedIn) {
+                    const form = this.closest('form');
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form),
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Lỗi ${response.status}: ${response.statusText}`);
+                        }
+
+                        const data = await response.json();
+                        if (data.success) {
+                            await fetchCartFromServer(); // Đợi đồng bộ dữ liệu
+                            updateCartModal(); // Cập nhật giao diện modal
+                            showToast(data.message || 'Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+
+                            // Mở modal
+                            const cartModalElement = document.getElementById('cartModal');
+                            if (cartModalElement) {
+                                const cartModal = new bootstrap.Modal(cartModalElement);
+                            }
+                        } else {
+                            showToast(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'danger');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showToast('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message, 'danger');
+                    }
+                } else {
+                    addToCart(id, 1, null, null, name, price, hinhAnh);
+                    updateCartModal(); // Cập nhật giao diện modal
+                    const cartModalElement = document.getElementById('cartModal');
+                    if (cartModalElement) {
+                        const cartModal = new bootstrap.Modal(cartModalElement);
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('.buy-now').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const price = parseInt(this.getAttribute('data-price'));
+                const hinhAnh = this.getAttribute('data-hinh-anh');
+        
+                if (isLoggedIn) {
+                    const form = this.closest('form');
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            fetchCartFromServer().then(() => {
+                                window.location.href = '{{ route('checkout') }}';
+                            }).catch(() => {
+                                window.location.href = '{{ route('checkout') }}';
+                            });
+                        } else {
+                            showToast(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!', 'danger');
+                    });
+                } else {
+                    addToCart(id, 1, null, null, name, price, hinhAnh);
+                    window.location.href = '{{ route('checkout') }}';
+                }
+            });
+        });
         
         // Cập nhật giỏ hàng khi mở modal
         const cartModal = document.getElementById('cartModal');
         if (cartModal) {
-            cartModal.addEventListener('shown.bs.modal', function () {
-                updateCartModal();
-            });
-        }
+            cartModal.addEventListener('shown.bs.modal', async function () { // Thêm async để sử dụng await
+                const cartItemsDiv = document.getElementById('cart-items');
+                if (cartItemsDiv) {
+                    cartItemsDiv.innerHTML = '<p class="text-center">Đang tải giỏ hàng...</p>';
+                }
 
+                if (isLoggedIn) {
+                    try {
+                        await fetchCartFromServer(); // Đợi đồng bộ dữ liệu
+                        updateCartModal(); // Cập nhật giao diện modal
+                    } catch (error) {
+                        console.error('Error syncing cart:', error);
+                        showToast('Không thể đồng bộ giỏ hàng từ server: ' + error.message, 'danger');
+                        updateCartModal();
+                    }
+                } else {
+                    updateCartModal(); // Hiển thị dữ liệu từ localStorage
+                }
+            });
+        }       
         // Đồng bộ giỏ hàng khi đăng nhập
         @if(session('just_logged_in'))
             const cart = getCart();
@@ -561,35 +966,36 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        localStorage.removeItem('cart'); // Xóa Local Storage sau khi đồng bộ
-                        updateCartCount();
-                        updateCartModal();
-                        alert(data.message);
+                        localStorage.removeItem('cart');
+                        fetchCartFromServer().then(() => {
+                            showToast(data.message, 'success');
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Có lỗi xảy ra khi đồng bộ giỏ hàng!');
+                    showToast('Có lỗi xảy ra khi đồng bộ giỏ hàng!', 'danger');
                 });
             }
         @endif
-
+        
         // Cập nhật số lượng giỏ hàng khi tải trang
         updateCartCount();
+        
         let lastScrollTop = 0;
         const navbar = document.querySelector(".navbar");
-
+        
         window.addEventListener("scroll", function () {
             let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
+        
             if (scrollTop > lastScrollTop) {
-                navbar.style.top = "-100px"; // Ẩn navbar khi cuộn xuống
+                navbar.style.top = "-120px";
             } else {
-                navbar.style.top = "0"; // Hiện navbar khi cuộn lên
+                navbar.style.top = "0";
             }
             lastScrollTop = scrollTop;
         });
-
+        
         document.querySelectorAll('.increase-quantity').forEach(button => {
             button.addEventListener('click', function() {
                 const input = this.parentElement.querySelector('.quantity-input');
@@ -601,7 +1007,7 @@
                 }
             });
         });
-
+        
         document.querySelectorAll('.decrease-quantity').forEach(button => {
             button.addEventListener('click', function() {
                 const input = this.parentElement.querySelector('.quantity-input');
@@ -615,7 +1021,7 @@
                 }
             });
         });
-
+        
         
     </script>
 </body>

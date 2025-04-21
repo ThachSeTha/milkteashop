@@ -10,7 +10,7 @@ class NhanVien extends Model
     use HasFactory;
 
     protected $table = 'nhan_viens';
-    protected $primaryKey = 'id'; // Khóa chính
+    protected $primaryKey = 'id'; 
     public $timestamps = false; // Nếu bảng có cột created_at và updated_at
 
     protected $fillable = [
@@ -26,13 +26,13 @@ class NhanVien extends Model
         'mat_khau'
     ];
     public function chucVu()
+    {
+        return $this->belongsTo(ChucVu::class, 'chuc_vu');
+    }
+    public function setMatKhauAttribute($value)
      {
-         return $this->belongsTo(ChucVu::class, 'chuc_vu');
-     }
-     public function setMatKhauAttribute($value)
-      {
-     
-       $this->attributes['mat_khau'] = bcrypt($value);
-     
-     }
+    
+      $this->attributes['mat_khau'] = bcrypt($value);
+    
+    }
 }

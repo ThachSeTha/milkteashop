@@ -4,62 +4,102 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SanPham;
+use App\Models\DanhMuc;
+use App\Models\Size;
+use App\Models\Topping;
 
 class SanPhamController extends Controller
 {
     // Hiển thị danh sách sản phẩm
-    public function index()
+    public function index(Request $request)
     {
-        $sanPhams = SanPham::all();
-        return view('sanpham.index', compact('sanPhams'));
+        $danhMucs = DanhMuc::all();
+
+        $query = SanPham::with('danhMuc');
+
+        if ($request->has('danh_muc_filter') && $request->danh_muc_filter != '') {
+            $query->where('danh_mucs_id', $request->danh_muc_filter);
+        }
+
+        $sanPhams = $query->get();
+
+        return view('sanpham.index', compact('sanPhams', 'danhMucs'));
+    }
+
+    // Hiển thị sản phẩm cho công chúng
+    public function public(Request $request)
+    {
+        $danhMucs = DanhMuc::all();
+        $sizes = Size::all();
+        $toppings = Topping::all();
+
+        $query = SanPham::with('danhMuc');
+
+        // Lọc theo danh mục
+        if ($request->has('danh_muc_filter') && $request->danh_muc_filter != '') {
+            $query->where('danh_mucs_id', $request->danh_muc_filter);
+        }
+
+        // Lọc theo giá
+        if ($request->has('price_filter') && $request->price_filter != '') {
+            $priceRange = explode('-', $request->price_filter);
+            
+            if (count($priceRange) == 2) {
+                if ($priceRange[1] == '+') {
+                    $query->where('gia', '>=', $priceRange[0]);
+                } else {
+                    $query->whereBetween('gia', [$priceRange[0], $priceRange[1]]);
+                }
+            }
+        }
+
+        $sanPhams = $query->get();
+
+        return view('sanpham.public', compact('sanPhams', 'danhMucs', 'sizes', 'toppings'));
     }
 
     // Hiển thị form tạo sản phẩm
     public function create()
     {
-        return view('sanpham.create');
+        $danhMucs = DanhMuc::all();
+        $sanPham = (object) ['danh_mucs_id' => null];  
+          return view('sanpham.create', compact('danhMucs', 'sanPham'));
     }
 
     // Lưu sản phẩm mới vào database
     public function store(Request $request)
-{
-    $request->validate([
-        'ten_san_pham' => 'required|string|max:255',
-        'mo_ta' => 'nullable|string',
-        'gia' => 'required|numeric',
-        'hinh_anh' => 'required|image|mimes:jpeg,png,jpg|max:4096',
-        'danh_mucs_id' => 'nullable|exists:danh_mucs,id',
-    ]);
+    {
+        $request->validate([
+            'ten_san_pham' => 'required|string|max:255',
+            'mo_ta' => 'nullable|string',
+            'gia' => 'required|numeric',
+            'hinh_anh' => 'required|image|mimes:jpeg,png,jpg|max:4096',
+            'danh_mucs_id' => 'required|exists:danh_mucs,id', // Thêm exists validation
+        ]);
 
-    if ($request->hasFile('hinh_anh')) {
-        $file = $request->file('hinh_anh');
+        $fileName = null; // Khởi tạo biến fileName
 
-        //  Lấy tên file và chuyển đến thư mục public/uploads
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->move(public_path('uploads'), $fileName);
-
-        // Kiểm tra file đã di chuyển thành công chưa
-        if (!$filePath) {
-            return back()->withErrors(['hinh_anh' => 'Không thể lưu file, kiểm tra quyền thư mục.']);
+        if ($request->hasFile('hinh_anh')) {
+            $file = $request->file('hinh_anh');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads'), $fileName);
         }
+
+        $sanPham = new SanPham();
+        $sanPham->ten_san_pham = $request->ten_san_pham;
+        $sanPham->mo_ta = $request->mo_ta;
+        $sanPham->gia = $request->gia;
+        $sanPham->hinh_anh = $fileName ? 'uploads/' . $fileName : null;
+        $sanPham->danh_mucs_id = $request->danh_mucs_id;
+        $sanPham->save();
+
+        return redirect()->route('sanpham.index')->with('success', 'Sản phẩm đã được tạo thành công!');
     }
 
-    // Lưu vào database
-    SanPham::create([
-        'ten_san_pham' => $request->ten_san_pham,
-        'mo_ta' => $request->mo_ta,
-        'gia' => $request->gia,
-        'hinh_anh' => 'uploads/' . $fileName,
-        'danh_mucs_id' => $request->danh_mucs_id,
-    ]);
-
-    return redirect()->route('sanpham.index')->with('success', 'Sản phẩm đã được thêm!');
-}
-
-    // Hiển thị chi tiết một sản phẩm
+    // Hiển thị chi tiết sản phẩm
     public function show($id)
     {
-        $sanPham = SanPham::findOrFail($id);
+        $sanPham = SanPham::with('danhMuc')->findOrFail($id);
         return view('sanpham.show', compact('sanPham'));
     }
 
@@ -67,52 +107,57 @@ class SanPhamController extends Controller
     public function edit($id)
     {
         $sanPham = SanPham::findOrFail($id);
-        return view('sanpham.edit', compact('sanPham'));
+        $danhMucs = DanhMuc::all();
+        return view('sanpham.edit', compact('sanPham', 'danhMucs'));
     }
 
-    // Cập nhật thông tin sản phẩm
-    public function update(Request $request, $id)
+    // Cập nhật sản phẩm
+    public function update(Request $request, $id) // Sửa tham số $sanPham thành $id
     {
+        $sanPham = SanPham::findOrFail($id); // Tìm sản phẩm theo id
+
         $request->validate([
             'ten_san_pham' => 'required|string|max:255',
             'mo_ta' => 'nullable|string',
             'gia' => 'required|numeric',
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
-            'danh_mucs_id' => 'nullable|exists:danh_mucs,id',
+            'danh_mucs_id' => 'required|exists:danh_mucs,id',
         ]);
-    
-        $sanPham = SanPham::findOrFail($id);
-    
+
+        $sanPham->ten_san_pham = $request->ten_san_pham;
+        $sanPham->mo_ta = $request->mo_ta;
+        $sanPham->gia = $request->gia;
+        $sanPham->danh_mucs_id = $request->danh_mucs_id;
+
         if ($request->hasFile('hinh_anh')) {
-            // Xóa ảnh cũ nếu có
+            // Xóa hình ảnh cũ nếu có
             if ($sanPham->hinh_anh && file_exists(public_path($sanPham->hinh_anh))) {
                 unlink(public_path($sanPham->hinh_anh));
             }
-    
-            // Lưu ảnh mới
+
             $file = $request->file('hinh_anh');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->move(public_path('uploads'), $fileName);
+            $file->move(public_path('uploads'), $fileName);
             $sanPham->hinh_anh = 'uploads/' . $fileName;
         }
-    
-        $sanPham->update([
-            'ten_san_pham' => $request->ten_san_pham,
-            'mo_ta' => $request->mo_ta,
-            'gia' => $request->gia,
-            'danh_mucs_id' => $request->danh_mucs_id,
-            'hinh_anh' => $sanPham->hinh_anh, // Giữ ảnh cũ nếu không có ảnh mới
-        ]);
-    
-        return redirect()->route('sanpham.index')->with('success', 'Sản phẩm đã được cập nhật!');
+
+        $sanPham->save();
+
+        return redirect()->route('sanpham.index')->with('success', 'Sản phẩm đã được cập nhật thành công!');
     }
-    
+
     // Xóa sản phẩm
     public function destroy($id)
     {
         $sanPham = SanPham::findOrFail($id);
+        
+        // Xóa hình ảnh nếu có
+        if ($sanPham->hinh_anh && file_exists(public_path($sanPham->hinh_anh))) {
+            unlink(public_path($sanPham->hinh_anh));
+        }
+        
         $sanPham->delete();
-
-        return redirect()->route('sanpham.index')->with('success', 'Sản phẩm đã được xóa!');
+        
+        return redirect()->route('sanpham.index')->with('success', 'Sản phẩm đã được xóa thành công!');
     }
 }

@@ -9,14 +9,82 @@
     <!-- Thêm Font Awesome để sử dụng biểu tượng -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        ::-webkit-scrollbar {
+        width: 12px;  
+        }
+        ::-webkit-scrollbar-track {
+        background: #f1f1f1;  
+        }
+        ::-webkit-scrollbar-thumb {
+        background: pink;  
+        border-radius: 6px; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+        }   
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #ffcad4, #f4acb7);
+            color: #333;
+            overflow-x: hidden;
+        }
+        a{
+            color: #333; 
+            font-weight: 600;
+        }
+        /* Navbar */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            transition: top 0.3s;
+            z-index: 1000;
+        }
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+            transition: transform 0.3s;
+        }
+        .navbar-brand img:hover {
+            transform: rotate(10deg);
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #ff85a2 !important;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #ff85a2;
+            transition: width 0.3s;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
         .hero-section {
             background: url('/uploads/background.jpg') no-repeat center center;
             background-size: cover;
-            color: rgb(5, 5, 5);
-            padding: 120px 0;
+            height: 600px;
+            color: rgb(7, 7, 7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             margin-top: 110px;
             position: relative;
+            margin-top: 70px;
         }
         .product-card {
             transition: transform 0.3s, border-color 0.3s;
@@ -231,6 +299,102 @@
             background-color: #FFEA00;
             transform: scale(1.05);
         }
+        .footer p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .social-links a {
+            font-size: 24px;
+            color: #ff8585;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .social-links a:hover {
+            color: #e06b88;
+            transform: scale(1.2);
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .modal-title {
+            font-family: 'Pacifico', cursive;
+            color: #ff85a2;
+        }
+        .btn-primary {
+            background-color: #ff85a2;
+            border-color: #ff85a2;
+        }
+        .btn-primary:hover {
+            background-color: #e06b88;
+            border-color: #e06b88;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes blink {
+            50% { opacity: 0.6; }
+        }
+        .logo{
+            font-weight: 900;
+            background-image: linear-gradient(to right, #ff85a2, #ff6f61);
+            background-size: 100%;
+            background-repeat: no-repeat;
+            
+            background-clip:text;
+            color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        
+
+        .about-section {
+            padding: 80px 0;
+            background-color: #fce0e5;  
+        }
+
+        .section-title{
+            font-family: 'Pacifico', cursive;
+            color: #ff85a2;
+        }
+
+        .about-section img {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .about-section p {
+            font-size: 1.1rem;
+            color: #555;
+            line-height: 1.8;
+        }
+        .about-setion .container h2{
+            font-family: 'Pacifico', cursive;
+            color: #ff85a2;
+        }   
+        .about-section .lead {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ff85a2;
+            margin-bottom: 20px;
+        }
+
+        .about-section .btn-primary {
+            margin-top: 30px;
+        }
+        a {
+            color: #1a0bec;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -256,13 +420,13 @@
                         <a class="nav-link active" href="/">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/sanpham">Sản phẩm</a>
+                        <a class="nav-link" href="/products">Sản phẩm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Giới thiệu</a>
+                        <a class="nav-link" href="/gioithieu">Giới thiệu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Liên hệ</a>
+                        <a class="nav-link" href="/lienhe">Liên hệ</a>
                     </li>
                     <!-- Thanh tìm kiếm -->
                     <li class="nav-item">
@@ -273,17 +437,26 @@
                     </li>
                     <!-- Tài khoản -->
                     <li class="nav-item">
-                        @if(Auth::check())
-                            <a class="nav-link" href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-user me-1"></i>Đăng xuất
+                        @auth
+                            <div class="dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user"></i> {{ Auth::user()->name }}
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="#">Thông tin cá nhân</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Đăng xuất</a></li>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                        @csrf
+                                    </form>
+                                </ul>
+                            </div>
+                            @else
+                            <a class="nav-link login-icon" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                <i class="fas fa-sign-in-alt"></i> Đăng nhập
                             </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        @else
-                            <a class="nav-link" href="{{ route('login') }}"><i class="fas fa-user me-1"></i>Đăng nhập</a>
-                        @endif
+    
+                        @endauth
                     </li>
                     <!-- Giỏ hàng -->
                     <li class="nav-item position-relative">
@@ -296,7 +469,97 @@
             </div>
         </div>
     </nav>
-
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Đăng nhập</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('login') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                    </form>
+                    <p class="mt-3">Chưa có tài khoản? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Đăng ký</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Registration Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">Đăng ký</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('register') }}" method="POST">
+                        @csrf
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
+                            @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required>
+                            @error('phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" value="{{ old('address') }}">
+                            @error('address')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+                            @error('password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="password_confirmation" class="form-label">Xác nhận mật khẩu</label>
+                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Đăng ký</button>
+                    </form>
+                    <p class="mt-3">Đã có tài khoản? <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">Đăng nhập</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modal Giỏ hàng -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -375,7 +638,7 @@
         <div class="container">
             <h1>Chào mừng đến với MilkTeaShop</h1>
             <p>Thưởng thức những ly trà sữa thơm ngon, đậm đà hương vị!</p>
-            <a href="#products" class="btn btn-primary btn-lg">Đặt hàng ngay</a>
+            <a href="/products" class="btn btn-primary btn-lg">Đặt hàng ngay</a>
         </div>
     </div>
 
@@ -383,7 +646,7 @@
     <div class="container my-5" id="products">
         <div class="products-header">
             <h2>Sản Phẩm Nổi Bật</h2>
-            <a href="#" class="btn btn-view-all">Xem tất cả sản phẩm</a>
+            <a href="/products" class="btn btn-view-all">Xem tất cả sản phẩm</a>
         </div>
         @if($sanPhams->isEmpty())
             @if(request()->has('query'))
@@ -394,7 +657,7 @@
         @else
             <!-- Danh sách sản phẩm -->
             <div class="row">
-                @foreach($sanPhams as $sanPham)
+                @foreach($sanPhams->take(3) as $sanPham)
                     <div class="col-md-4 mb-4">
                         <div class="card product-card">
                             <img src="{{ $sanPham->hinh_anh ?? 'https://via.placeholder.com/300' }}" class="card-img-top" alt="{{ $sanPham->ten_san_pham }}">

@@ -29,7 +29,11 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    
+    // public function getAuthIdentifierName()
+    // {
+    //     return 'email';
+    // }
+
     public function getAuthPassword()
     {
         return $this->password;
@@ -40,8 +44,8 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
     public function isAdmin()
-    {
-        return $this->role_id == 7;
-    }
-    
+{
+    return $this->role_id == 7;
+}
+
 }

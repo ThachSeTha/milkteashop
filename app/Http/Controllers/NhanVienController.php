@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
+
 use App\Models\NhanVien;
-use App\Models\User;
 use App\Models\ChucVu;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
 class NhanVienController extends Controller
 {
@@ -50,17 +49,12 @@ class NhanVienController extends Controller
             
     }
 
-    /**
-     * Show the form for creating a new resource. Tạo nhân viên
-     */
     public function create()
     {
         $chucVus = ChucVu::all();
-        return view('nhanviens.create', compact('chucVus'));    }
+        return view('nhanviens.create', compact('chucVus'));
+    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -82,29 +76,33 @@ class NhanVienController extends Controller
     {
         return view('nhanviens.show', compact('nhanvien'));
     }
-    public function edit(NhanVien $nhanvien)    {
+    public function edit(NhanVien $nhanvien)
+    {
         $chucVus = ChucVu::all();
-        return view('nhanviens.edit', compact('nhanvien', 'chucVus'));    }
-
-     public function update(Request $request, NhanVien $nhanvien)
-        {
-            $request->validate([
-                'ho_ten' => 'required',
-                'email' => 'required|email|unique:nhan_viens,email,' . $nhanvien->id,
-                'so_dien_thoai' => 'required',
-                'chuc_vu' => 'required',
-                'dia_chi' => 'required|string|max:255',
-            ]);
-            $nhanvien->update($request->all());
-            $nhanvien->save();
-            return redirect()->route('nhanviens.index')->with('success', 'Nhân viên đã được cập nhật thành công.');
+        return view('nhanviens.edit', compact('nhanvien', 'chucVus'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(NhanVien $nhanvien)    {
-            $nhanvien->delete();
-            return redirect()->route('nhanviens.index')->with('success', 'Nhân viên đã được xóa thành công.');
+    public function update(Request $request, NhanVien $nhanvien)
+    {
+        $request->validate([
+            'ho_ten' => 'required',
+            'email' => 'required|email|unique:nhan_viens,email,' . $nhanvien->id,
+            'so_dien_thoai' => 'required',
+            'chuc_vu' => 'required',
+            'dia_chi' => 'required|string|max:255',
+        ]);
+
+        $nhanvien->update($request->all());
+    
+    $nhanvien->save();
+
+    return redirect()->route('nhanviens.index')->with('success', 'Nhân viên đã được cập nhật thành công.');
+    }
+
+    public function destroy(NhanVien $nhanvien)
+    {
+        $nhanvien->delete();
+
+        return redirect()->route('nhanviens.index')->with('success', 'Nhân viên đã được xóa thành công.');
     }
 }

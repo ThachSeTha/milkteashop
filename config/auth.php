@@ -57,6 +57,11 @@ return [
         ],
     ],
 
+    'admins' => [ // Thêm provider admins
+        'driver' => 'eloquent',
+        'model' => App\Models\Admin::class, // Thay đổi model nếu cần
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | User Providers

@@ -123,9 +123,7 @@ class CheckoutController extends Controller
             ], 500);
         }
     }   
-        /**
-     * Xử lý đặt hàng
-     */
+    //   Xử lý đặt hàng
     public function store(Request $request)
     {
         try {
@@ -343,231 +341,6 @@ class CheckoutController extends Controller
             return response()->json(['success' => false, 'message' => 'Lỗi khi đồng bộ giỏ hàng: ' . $e->getMessage()]);
         }
     }
-    /**
-     * Tạo đơn hàng MoMo
-     */    
-    public function createMoMoOrder(Request $request)
-    {
-        try {
-            // Validate dữ liệu
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'phone' => 'required|string|max:15',
-                'address' => 'required|string',
-                'hinh_thuc_giao_hang' => 'required|string|in:pickup,delivery',
-            ]);
-
-            // Lấy giỏ hàng
-            $sessionId = Session::getId();
-            $userId = Auth::id();
-
-            $cartItems = GioHang::where(function ($query) use ($userId, $sessionId) {
-                if ($userId) {
-                    $query->where('user_id', $userId);
-                } else {
-                    $query->where('session_id', $sessionId);
-                }
-            })
-                ->with(['sanPham', 'size', 'topping'])
-                ->get();
-
-            if ($cartItems->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Giỏ hàng của bạn đang trống!',
-                ]);
-            }
-
-            // Tính tổng tiền
-            $total = 0;
-            foreach ($cartItems as $item) {
-                $giaSanPham = $item->sanPham->gia;
-                $giaSize = $item->size ? $item->size->price_multiplier : 0;
-                $giaTopping = $item->topping ? $item->topping->price : 0;
-                $giaBan = $giaSanPham + $giaSize + $giaTopping;
-                $item->thanh_tien = $giaBan * $item->so_luong;
-                $total += $item->thanh_tien;
-            }
-
-            // Tạo mã đơn hàng duy nhất
-            $maDonHang = 'DH-' . date('Ymd') . '-' . str_pad(DonHang::count() + 1, 4, '0', STR_PAD_LEFT);
-
-            // Tạo đơn hàng tạm thời để lấy ID
-            $donHang = DonHang::create([
-                'ma_don_hang' => $maDonHang,
-                'user_id' => $userId,
-                'name' => $validated['name'],
-                'phone' => $validated['phone'],
-                'address' => $validated['address'],
-                'hinh_thuc_giao_hang' => $validated['hinh_thuc_giao_hang'],
-                'payment_method' => 'momo',
-                'tong_tien' => $total, // Sửa 'total' thành 'tong_tien'
-                'trang_thai' => 'awaiting_payment', // Sửa 'status' thành 'trang_thai'
-            ]);
-
-            // Tạo chi tiết đơn hàng
-            foreach ($cartItems as $item) {
-                $giaSanPham = $item->sanPham->gia;
-                $giaSize = $item->size ? $item->size->price_multiplier : 0;
-                $giaTopping = $item->topping ? $item->topping->price : 0;
-                $giaBan = $giaSanPham + $giaSize + $giaTopping;
-
-                ChiTietDonHang::create([
-                    'don_hang_id' => $donHang->id,
-                    'san_pham_id' => $item->san_pham_id,
-                    'size_id' => $item->size_id,
-                    'topping_id' => $item->topping_id,
-                    'so_luong' => $item->so_luong,
-                    'gia_ban' => $giaBan,
-                ]);
-            }
-
-            // Chuẩn bị dữ liệu cho API MoMo
-            $orderId = "DH{$donHang->id}_" . time();
-            $requestId = time() . "";
-            $orderInfo = "Thanh toán đơn hàng #{$donHang->id}";
-            $amount = $total;
-            $redirectUrl = config('momo.return_url');
-            $ipnUrl = config('momo.notify_url');
-            $extraData = base64_encode(json_encode(['order_id' => $donHang->id]));
-
-            $rawHash = "accessKey=" . config('momo.access_key') .
-                    "&amount=" . $amount .
-                    "&extraData=" . $extraData .
-                    "&ipnUrl=" . $ipnUrl .
-                    "&orderId=" . $orderId .
-                    "&orderInfo=" . $orderInfo .
-                    "&partnerCode=" . config('momo.partner_code') .
-                    "&redirectUrl=" . $redirectUrl .
-                    "&requestId=" . $requestId .
-                    "&requestType=captureWallet";
-
-            $signature = hash_hmac('sha256', $rawHash, config('momo.secret_key'));
-
-            $order = [
-                'partnerCode' => config('momo.partner_code'),
-                'partnerName' => 'MilkTeaShop',
-                'storeId' => 'MilkTeaShop',
-                'requestId' => $requestId,
-                'amount' => $amount,
-                'orderId' => $orderId,
-                'orderInfo' => $orderInfo,
-                'redirectUrl' => $redirectUrl,
-                'ipnUrl' => $ipnUrl,
-                'lang' => 'vi',
-                'extraData' => $extraData,
-                'requestType' => 'captureWallet',
-                'signature' => $signature,
-            ];
-
-            // Gọi API MoMo
-            $client = new \GuzzleHttp\Client();
-            $response = $client->post(config('momo.endpoint'), [
-                'json' => $order,
-            ]);
-
-            $result = json_decode($response->getBody(), true);
-
-            if ($result['resultCode'] !== 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể tạo đơn hàng MoMo: ' . $result['message'],
-                ]);
-            }
-
-            // Tạo mã QR từ payUrl
-            $qrCodeBase64 = QrCode::format('png')
-                ->size(300)
-                ->margin(1)
-                ->generate($result['payUrl']);
-
-            $qrCodeBase64 = base64_encode($qrCodeBase64);
-
-            return response()->json([
-                'success' => true,
-                'qr_code' => $qrCodeBase64,
-                'order_id' => $donHang->id,
-                'order' => [
-                    'id' => $donHang->id,
-                    'ma_don_hang' => $donHang->ma_don_hang,
-                    'name' => $donHang->name,
-                    'phone' => $donHang->phone,
-                    'address' => $donHang->address,
-                    'hinh_thuc_giao_hang' => $donHang->hinh_thuc_giao_hang,
-                    'payment_method' => $donHang->payment_method,
-                    'tong_tien' => $donHang->tong_tien,
-                    'trang_thai' => $donHang->trang_thai,
-                    'created_at' => $donHang->created_at->format('Y-m-d H:i:s'),
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $e->getMessage(),
-            ]);
-        }
-    }
-    public function paymentCallback(Request $request)
-    {
-        $data = $request->all();
-        $secretKey = config('momo.secret_key');
-
-        // Kiểm tra chữ ký
-        $rawHash = "accessKey=" . config('momo.access_key') .
-                "&amount=" . $data['amount'] .
-                "&extraData=" . $data['extraData'] .
-                "&message=" . $data['message'] .
-                "&orderId=" . $data['orderId'] .
-                "&orderInfo=" . $data['orderInfo'] .
-                "&orderType=" . $data['orderType'] .
-                "&partnerCode=" . $data['partnerCode'] .
-                "&payType=" . $data['payType'] .
-                "&requestId=" . $data['requestId'] .
-                "&responseTime=" . $data['responseTime'] .
-                "&resultCode=" . $data['resultCode'] .
-                "&transId=" . $data['transId'];
-        $signature = hash_hmac("sha256", $rawHash, $secretKey);
-
-        if ($signature !== $data['signature']) {
-            return redirect()->route('home')->with('error', 'Chữ ký không hợp lệ!');
-        }
-
-        $extraData = json_decode(base64_decode($data['extraData']), true);
-        $donHangId = $extraData['order_id'] ?? null;
-        $donHang = DonHang::find($donHangId);
-
-        if (!$donHang) {
-            return redirect()->route('home')->with('error', 'Đơn hàng không tồn tại!');
-        }
-
-        $userId = Auth::id();
-        $sessionId = Session::getId();
-
-        if ($data['resultCode'] == 0) {
-            // Thanh toán thành công
-            $donHang->update([
-                'trang_thai' => 'pending',
-            ]);
-
-            // Xóa giỏ hàng trong database
-            GioHang::where(function ($query) use ($userId, $sessionId) {
-                if ($userId) {
-                    $query->where('user_id', $userId);
-                } else {
-                    $query->where('session_id', $sessionId);
-                }
-            })->delete();
-
-            return redirect()->route('donhangs.index')->with('success', 'Thanh toán thành công! Đơn hàng của bạn đang được xử lý.');
-        } else {
-            // Thanh toán thất bại
-            $donHang->update([
-                'trang_thai' => 'failed',
-            ]);
-            return redirect()->route('donhangs.index')->with('error', 'Thanh toán thất bại: ' . $data['message']);
-        }
-    }
     public function placeOrder(Request $request)
     {
         try {
@@ -668,6 +441,171 @@ class CheckoutController extends Controller
             return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra khi đặt hàng: ' . $e->getMessage()], 500);
         }
     }
+    /**
+     * Tạo đơn hàng MoMo
+     */    
+    public function createMoMoOrder(Request $request)
+    {
+        try {
+            // Validate dữ liệu
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:15',
+                'address' => 'required|string',
+                'hinh_thuc_giao_hang' => 'required|string|in:pickup,delivery',
+            ]);
+
+            // Lấy giỏ hàng
+            $sessionId = Session::getId();
+            $userId = Auth::id();
+
+            $cartItems = GioHang::where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })
+                ->with(['sanPham', 'size', 'topping'])
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Giỏ hàng của bạn đang trống!',
+                ]);
+            }
+
+            // Tính tổng tiền
+            $total = 0;
+            foreach ($cartItems as $item) {
+                $giaSanPham = $item->sanPham->gia;
+                $giaSize = $item->size ? $item->size->price_multiplier : 0;
+                $giaTopping = $item->topping ? $item->topping->price : 0;
+                $giaBan = $giaSanPham + $giaSize + $giaTopping;
+                $item->thanh_tien = $giaBan * $item->so_luong;
+                $total += $item->thanh_tien;
+            }
+
+            // Tạo mã đơn hàng duy nhất
+            $maDonHang = 'DH-' . date('Ymd') . '-' . str_pad(DonHang::count() + 1, 4, '0', STR_PAD_LEFT);
+
+            // Tạo đơn hàng
+            $donHang = DonHang::create([
+                'ma_don_hang' => $maDonHang,
+                'user_id' => $userId,
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'hinh_thuc_giao_hang' => $validated['hinh_thuc_giao_hang'],
+                'payment_method' => $request->payment_method, // Lấy từ formData
+                'tong_tien' => $total,
+                'trang_thai' => 'awaiting_payment',
+            ]);
+
+            // Tạo chi tiết đơn hàng
+            foreach ($cartItems as $item) {
+                $giaSanPham = $item->sanPham->gia;
+                $giaSize = $item->size ? $item->size->price_multiplier : 0;
+                $giaTopping = $item->topping ? $item->topping->price : 0;
+                $giaBan = $giaSanPham + $giaSize + $giaTopping;
+
+                ChiTietDonHang::create([
+                    'don_hang_id' => $donHang->id,
+                    'san_pham_id' => $item->san_pham_id,
+                    'size_id' => $item->size_id,
+                    'topping_id' => $item->topping_id,
+                    'so_luong' => $item->so_luong,
+                    'gia_ban' => $giaBan,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'order_id' => $donHang->id,
+                'total' => $total,
+                'clearCart' => true,
+                'order' => [
+                    'id' => $donHang->id,
+                    'ma_don_hang' => $donHang->ma_don_hang,
+                    'name' => $donHang->name,
+                    'phone' => $donHang->phone,
+                    'address' => $donHang->address,
+                    'hinh_thuc_giao_hang' => $donHang->hinh_thuc_giao_hang,
+                    'payment_method' => $donHang->payment_method,
+                    'tong_tien' => $donHang->tong_tien,
+                    'trang_thai' => $donHang->trang_thai,
+                    'created_at' => $donHang->created_at->format('Y-m-d H:i:s'),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage(),
+            ]);
+        }
+    }
+    public function paymentCallback(Request $request)
+    {
+        $data = $request->all();
+        $secretKey = config('momo.secret_key');
+
+        // Kiểm tra chữ ký
+        $rawHash = "accessKey=" . config('momo.access_key') .
+                "&amount=" . $data['amount'] .
+                "&extraData=" . $data['extraData'] .
+                "&message=" . $data['message'] .
+                "&orderId=" . $data['orderId'] .
+                "&orderInfo=" . $data['orderInfo'] .
+                "&orderType=" . $data['orderType'] .
+                "&partnerCode=" . $data['partnerCode'] .
+                "&payType=" . $data['payType'] .
+                "&requestId=" . $data['requestId'] .
+                "&responseTime=" . $data['responseTime'] .
+                "&resultCode=" . $data['resultCode'] .
+                "&transId=" . $data['transId'];
+        $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
+        if ($signature !== $data['signature']) {
+            return redirect()->route('home')->with('error', 'Chữ ký không hợp lệ!');
+        }
+
+        $extraData = json_decode(base64_decode($data['extraData']), true);
+        $donHangId = $extraData['order_id'] ?? null;
+        $donHang = DonHang::find($donHangId);
+
+        if (!$donHang) {
+            return redirect()->route('home')->with('error', 'Đơn hàng không tồn tại!');
+        }
+
+        $userId = Auth::id();
+        $sessionId = Session::getId();
+
+        if ($data['resultCode'] == 0) {
+            // Thanh toán thành công
+            $donHang->update([
+                'trang_thai' => 'pending',
+            ]);
+
+            // Xóa giỏ hàng trong database
+            GioHang::where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })->delete();
+
+            return redirect()->route('donhangs.index')->with('success', 'Thanh toán thành công! Đơn hàng của bạn đang được xử lý.');
+        } else {
+            // Thanh toán thất bại
+            $donHang->update([
+                'trang_thai' => 'failed',
+            ]);
+            return redirect()->route('donhangs.index')->with('error', 'Thanh toán thất bại: ' . $data['message']);
+        }
+    }
     public function checkMoMoStatus($orderId)
     {
         try {
@@ -693,6 +631,56 @@ class CheckoutController extends Controller
                 'success' => false,
                 'message' => 'Không thể kiểm tra trạng thái đơn hàng: ' . $e->getMessage(),
             ]);
+        }
+    }
+    public function handleMoMoNotify(Request $request)
+    {
+        try {
+            $data = $request->all();
+            $orderId = $data['orderId'] ?? null;
+            $resultCode = $data['resultCode'] ?? null;
+
+            if (!$orderId || $resultCode === null) {
+                return response()->json(['status' => 'error', 'message' => 'Dữ liệu không hợp lệ'], 400);
+            }
+
+            // Lấy order_id từ extraData
+            $extraData = json_decode(base64_decode($data['extraData']), true);
+            $donHangId = $extraData['order_id'] ?? null;
+
+            if (!$donHangId) {
+                return response()->json(['status' => 'error', 'message' => 'Không tìm thấy đơn hàng'], 400);
+            }
+
+            $donHang = DonHang::find($donHangId);
+            if (!$donHang) {
+                return response()->json(['status' => 'error', 'message' => 'Đơn hàng không tồn tại'], 404);
+            }
+
+            if ($resultCode == 0) {
+                // Thanh toán thành công
+                $donHang->status = 'paid';
+                $donHang->save();
+
+                // Xóa giỏ hàng
+                $userId = $donHang->user_id;
+                $sessionId = Session::getId();
+                GioHang::where(function ($query) use ($userId, $sessionId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->where('session_id', $sessionId);
+                    }
+                })->delete();
+            } else {
+                // Thanh toán thất bại
+                $donHang->status = 'failed';
+                $donHang->save();
+            }
+
+            return response()->json(['status' => 'success', 'message' => 'Xử lý thông báo thành công']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
         }
     }
     public function updateQuantity(Request $request)
@@ -806,56 +794,6 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             Log::error('CheckoutController@getCart - Error: ' . $e->getMessage());
             return response()->json([]); // Trả về mảng rỗng nếu có lỗi
-        }
-    }
-    public function handleMoMoNotify(Request $request)
-    {
-        try {
-            $data = $request->all();
-            $orderId = $data['orderId'] ?? null;
-            $resultCode = $data['resultCode'] ?? null;
-
-            if (!$orderId || $resultCode === null) {
-                return response()->json(['status' => 'error', 'message' => 'Dữ liệu không hợp lệ'], 400);
-            }
-
-            // Lấy order_id từ extraData
-            $extraData = json_decode(base64_decode($data['extraData']), true);
-            $donHangId = $extraData['order_id'] ?? null;
-
-            if (!$donHangId) {
-                return response()->json(['status' => 'error', 'message' => 'Không tìm thấy đơn hàng'], 400);
-            }
-
-            $donHang = DonHang::find($donHangId);
-            if (!$donHang) {
-                return response()->json(['status' => 'error', 'message' => 'Đơn hàng không tồn tại'], 404);
-            }
-
-            if ($resultCode == 0) {
-                // Thanh toán thành công
-                $donHang->status = 'paid';
-                $donHang->save();
-
-                // Xóa giỏ hàng
-                $userId = $donHang->user_id;
-                $sessionId = Session::getId();
-                GioHang::where(function ($query) use ($userId, $sessionId) {
-                    if ($userId) {
-                        $query->where('user_id', $userId);
-                    } else {
-                        $query->where('session_id', $sessionId);
-                    }
-                })->delete();
-            } else {
-                // Thanh toán thất bại
-                $donHang->status = 'failed';
-                $donHang->save();
-            }
-
-            return response()->json(['status' => 'success', 'message' => 'Xử lý thông báo thành công']);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
         }
     }
     public function updateCart(Request $request)

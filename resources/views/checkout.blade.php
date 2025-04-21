@@ -8,6 +8,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            background-color: #f7d3e1;
+            font-family: Arial, sans-serif;
+        }
         /* Navbar cố định khi cuộn */
         .navbar {
             position: fixed;
@@ -248,16 +252,22 @@
             padding: 0.5rem 1rem;
         }
         .momo-info {
-            display: none;
             margin-top: 10px;
             padding: 10px;
-            background-color: #e9ecef;
+            border: 1px solid #ddd;
             border-radius: 5px;
         }
         .qr-code-container {
-            display: none;
-            margin-top: 20px;
             text-align: center;
+        }
+        .qr-code {
+            max-width: 200px;
+            margin: 10px 0;
+        }
+
+        .total-amount {
+            font-weight: bold;
+            color: #e74c3c;
         }
         .cart-item {
             border-bottom: 1px solid #ddd;
@@ -297,13 +307,13 @@
                         <a class="nav-link active" href="/">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/sanpham/create">Sản phẩm</a>
+                        <a class="nav-link" href="/products">Sản phẩm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Giới thiệu</a>
+                        <a class="nav-link" href="/gioithieu">Giới thiệu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Liên hệ</a>
+                        <a class="nav-link" href="/lienhe">Liên hệ</a>
                     </li>
                     <!-- Thanh tìm kiếm -->
                     <li class="nav-item">
@@ -371,14 +381,12 @@
         <div id="main-cart-items-container">
             <!-- Danh sách sản phẩm sẽ được render bằng JavaScript -->
         </div>
-        <div class="text-end">
-            <strong>Tổng tiền: <span id="main-total-amount">0</span> VNĐ</strong>
-        </div>
     
         <!-- Form xác nhận đặt hàng -->
         <div class="checkout-form mt-4">
-            <h3>Thông tin đặt hàng</h3>
             <form id="place-order-form"method="POST">
+                <h3>Thông tin đặt hàng</h3>
+
                 @csrf
                 <!-- Các trường thông tin khách hàng giữ nguyên -->
                 <div class="mb-3">
@@ -426,12 +434,11 @@
                         <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                         <option value="momo">Chuyển khoản qua MoMo</option>
                     </select>
-                    <div class="momo-info" id="momo-info">
+                    <div class="momo-info" id="momo-info" style="display: none;">
                         <p><strong>Hướng dẫn thanh toán qua MoMo:</strong></p>
-                        <p>Quét mã QR bên dưới để thanh toán.</p>
-                        <div class="qr-code-container" id="qr-code-container">
-                            <img id="qr-code" src="" alt="QR Code MoMo">
-                            <p id="order-id"></p>
+                        <p>Quét mã QR bên dưới và nhập số tiền: <span id="main-total-amount">0</span> VNĐ</p>
+                        <div class="qr-code-container" id="qr-code-container" style="display: none;">
+                            <img id="qr-code" src="/uploads/QRcode.jpg" alt="QR Code MoMo" style="max-width: 300px;">
                         </div>
                     </div>
                 </div>
@@ -1585,22 +1592,25 @@
 
             // Hàm xử lý đặt hàng
             function placeOrder(formData, paymentMethod, cartItems) {
+                console.log('placeOrder called:', { paymentMethod, cartItems });
                 formData.append('cartItems', JSON.stringify(cartItems));
 
                 fetch('{{ route("checkout.placeOrder") }}', {
-                    method: 'POST', // Đảm bảo sử dụng POST
+                    method: 'POST',
                     body: formData,
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 })
                 .then(response => {
+                    console.log('Fetch response status:', response.status);
                     if (!response.ok) {
                         throw new Error('Server error: ' + response.status);
                     }
                     return response.json();
                 })
                 .then(data => {
+                    console.log('Backend response:', data);
                     if (!data.success) {
                         showToast(data.message, 'danger');
                         return;
@@ -1612,37 +1622,34 @@
                         localStorage.setItem('cartSynced', 'false');
                         renderCartItems();
                     } else if (paymentMethod === 'momo') {
-                        fetch('{{ route("checkout.momo.create") }}', {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(momoData => {
-                            if (momoData.success) {
-                                const qrCodeImg = document.getElementById('qr-code');
-                                if (qrCodeImg) {
-                                    qrCodeImg.src = 'data:image/png;base64,' + momoData.qr_code;
-                                }
-                                const orderIdElement = document.getElementById('order-id');
-                                if (orderIdElement) {
-                                    orderIdElement.textContent = `Mã đơn hàng: #${momoData.order_id}`;
-                                }
-                                const qrCodeContainer = document.getElementById('qr-code-container');
-                                if (qrCodeContainer) {
-                                    qrCodeContainer.style.display = 'block';
-                                }
-                                showToast('Vui lòng quét mã QR để thanh toán!', 'success');
-                            } else {
-                                showToast(momoData.message, 'danger');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showToast('Có lỗi xảy ra khi tạo đơn hàng MoMo!', 'danger');
+                        // Đảm bảo DOM đã tải
+                        const momoInfo = document.getElementById('momo-info');
+                        const qrCodeContainer = document.getElementById('qr-code-container');
+                        const orderIdElement = document.getElementById('order-id');
+                        const totalAmountElement = document.getElementById('total-amount');
+
+                        console.log('MoMo elements:', {
+                            momoInfo: !!momoInfo,
+                            qrCodeContainer: !!qrCodeContainer,
+                            orderIdElement: !!orderIdElement,
+                            totalAmountElement: !!totalAmountElement
                         });
+
+                        if (momoInfo && qrCodeContainer && orderIdElement && totalAmountElement) {
+                            momoInfo.style.display = 'block';
+                            qrCodeContainer.style.display = 'block';
+                            orderIdElement.textContent = data.order_id ? `Mã đơn hàng: #${data.order_id}` : 'Mã đơn hàng không khả dụng';
+                            totalAmountElement.textContent = data.total ? data.total.toLocaleString('vi-VN') : 'Số tiền không khả dụng';
+                            showToast('Vui lòng quét mã QR và nhập số tiền để thanh toán!', 'success');
+                        } else {
+                            showToast('Lỗi giao diện: Không tìm thấy phần tử hiển thị mã QR!', 'danger');
+                            console.error('Missing elements:', {
+                                momoInfo: momoInfo,
+                                qrCodeContainer: qrCodeContainer,
+                                orderIdElement: orderIdElement,
+                                totalAmountElement: totalAmountElement
+                            });
+                        }
                     }
 
                     if (data.clearCart) {
@@ -1654,7 +1661,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Fetch error:', error);
                     showToast('Có lỗi xảy ra khi đặt hàng: ' + error.message, 'danger');
                 });
             }
@@ -1722,10 +1729,13 @@
                     if (this.value === 'momo') {
                         if (momoInfo) {
                             momoInfo.style.display = 'block';
+                            qrCodeContainer.style.display = 'block';
+                            totalAmountElement.textContent = total.toLocaleString('vi-VN');
                         }
                     } else {
                         if (momoInfo) {
                             momoInfo.style.display = 'none';
+                            
                         }
                         if (qrCodeContainer) {
                             qrCodeContainer.style.display = 'none';
@@ -1764,7 +1774,6 @@
             updateCartCount();
             updateCartModal();
             
-
             // Đồng bộ giỏ hàng khi vào trang checkout
             if (isLoggedIn) {
                 const cart = getCart();

@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
-use App\Models\NhanVien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log; // Thêm import này
 
 class UserController extends Controller
 {
-    public function index(Request $request)    
+    public function index(Request $request)
     {
         $roles = Role::all();
         $query = User::with('role');
@@ -29,8 +27,9 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::all();
-        return view('users.create', compact('roles'));    }
-    
+        return view('users.create', compact('roles'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -38,7 +37,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users',
             'phone' => 'nullable',
             'password' => 'required|min:6',
-            'address' => 'nullable',            
+            'address' => 'nullable',
             'role_id' => 'required|exists:role,id',
         ]);
 
@@ -57,7 +56,8 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::all();
-        return view('users.edit', compact('user', 'roles'));    }
+        return view('users.edit', compact('user', 'roles'));
+    }
 
     public function update(Request $request, User $user)
     {
@@ -73,7 +73,7 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'address' => $request->address,            
+            'address' => $request->address,
             'role_id' => $request->role_id,
         ]);
         $user->email = $request->email;
@@ -111,13 +111,13 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Đổi mật khẩu thành công!');
     }
     public function phoneSuggestions(Request $request)
-    {
-        $term = $request->input('term'); // Từ khóa người dùng nhập
-        $phones = User::where('phone', 'like', '%' . $term . '%')
-                    ->pluck('phone') // Chỉ lấy cột phone
-                    ->take(10) // Giới hạn 10 gợi ý
-                    ->toArray();
+{
+    $term = $request->input('term'); // Từ khóa người dùng nhập
+    $phones = User::where('phone', 'like', '%' . $term . '%')
+                  ->pluck('phone') // Chỉ lấy cột phone
+                  ->take(10) // Giới hạn 10 gợi ý
+                  ->toArray();
 
-        return response()->json($phones); // Trả về JSON cho Autocomplete
-    }
+    return response()->json($phones); // Trả về JSON cho Autocomplete
+}
 }

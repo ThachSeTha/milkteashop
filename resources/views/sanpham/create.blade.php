@@ -176,6 +176,29 @@
                 padding: 1rem;
             }
         }
+        select {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        background: #f8f9fa;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        appearance: none; /* Loại bỏ kiểu dáng mặc định của trình duyệt */
+        -webkit-appearance: none; /* Cho Safari */
+        -moz-appearance: none; /* Cho Firefox */
+        background-image: url('data:image/svg+xml;utf8,<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="currentColor" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 12px;
+    }
+
+    select:focus {
+        background: white;
+        box-shadow: 0 0 0 3px rgba(110, 72, 170, 0.2);
+        outline: none;
+    }
     </style>
 </head>
 <body>
@@ -214,8 +237,14 @@
             </div>
 
             <div class="form-group">
-                <label>Danh Mục</label>
-                <input type="number" name="danh_mucs_id" placeholder="ID danh mục">
+            <label class="form-label">Danh Mục</label>
+            <select id="danh_mucs_id" name="danh_mucs_id">
+                    @foreach ($danhMucs as $danhMuc)
+                    <option value="{{ $danhMuc->id }}" {{ $sanPham->danh_mucs_id == $danhMuc->id ? 'selected' : '' }}>
+    {{ $danhMuc->ten_danh_muc }}
+</option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="button-group">
